@@ -29,7 +29,7 @@ namespace MelonLoader.InternalUtils
             if (!string.IsNullOrEmpty(MelonLaunchOptions.Core.UnityVersion))
             {
                 // TODO: unity version junk
-                try { EngineVersion = UnityVersion.Parse(MelonLaunchOptions.Core.UnityVersion }
+                try { EngineVersion = UnityVersion.Parse(MelonLaunchOptions.Core.UnityVersion); }
                 catch (Exception ex)
                 {
                     if (MelonDebug.IsEnabled())
