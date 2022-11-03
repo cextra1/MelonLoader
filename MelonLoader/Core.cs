@@ -32,6 +32,9 @@ namespace MelonLoader
             Fixes.ForcedCultureInfo.Install();
             Fixes.InstancePatchFix.Install();
             Fixes.ProcessFix.Install();
+#if __ANDROID__
+            Fixes.DateTimeOverride.Install();
+#endif
 #if !__ANDROID__
             PatchShield.Install();
 #endif

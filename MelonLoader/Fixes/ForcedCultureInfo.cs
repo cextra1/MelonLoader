@@ -39,15 +39,7 @@ namespace MelonLoader.Fixes
 					try { Core.HarmonyInstance.Patch(setMethod, PatchMethod_Set); }
 					catch (Exception ex) { MelonLogger.Warning($"Exception Patching Thread Set Method {propertyInfo.Name}: {ex}"); }
 			}
-
-			Core.HarmonyInstance.Patch(typeof(DateTime).GetProperty("Now").GetGetMethod(), typeof(ForcedCultureInfo).GetMethod("DateTimeNow").ToNewHarmonyMethod());
 		}
-
-		public static bool DateTimeNow(ref DateTime __result)
-        {
-			__result = default;
-			return false;
-        }
 
 		private static bool GetMethod(ref CultureInfo __result)
 		{
