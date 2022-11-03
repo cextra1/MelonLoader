@@ -17,7 +17,7 @@
 
 ## Lemon Credits
 - [SirCoolness](https://github.com/SirCoolness) - Wrote most of the android code (and the entirety of the Bootstrap) that I used for this version, as well as just being helpful
-- [SambodyCoding](https://github.com/SamboyCoding) - Helped me a bunch with assembly generation problems
+- [SamboyCoding](https://github.com/SamboyCoding) - Helped me a bunch with assembly generation problems
 
 ## GENERAL INFORMATION:
 
