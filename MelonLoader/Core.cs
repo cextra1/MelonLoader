@@ -20,7 +20,7 @@ namespace MelonLoader
             MelonUtils.Setup(curDomain);
             Assertions.LemonAssertMapping.Setup();
 
-            // TODO: MonoLibrary stuff
+            // TODO: MonoLibrary stuff; requires recompiling of Bootstrap
 #if !__ANDROID__
             if (!MonoLibrary.Setup()
                 || !MonoResolveManager.Setup())

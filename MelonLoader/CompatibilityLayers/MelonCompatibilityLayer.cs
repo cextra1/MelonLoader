@@ -8,7 +8,7 @@ namespace MelonLoader
     public static class MelonCompatibilityLayer
     {
 #if __ANDROID__
-        public static string baseDirectory = $"melonloader/etc/support";
+        public static string baseDirectory = $"melonloader/etc/compatibilitylayers";
 #else
         public static string baseDirectory = $"MelonLoader{Path.DirectorySeparatorChar}Dependencies{Path.DirectorySeparatorChar}CompatibilityLayers";
 #endif
@@ -57,8 +57,6 @@ namespace MelonLoader
                 string fileName = Path.GetFileName(file);
                 if (layers.Find(x => Path.GetFileName(x.fullPath).Equals(fileName)) == null)
                 {
-                    // TODO: deleting things that are important?
-                    MelonDebug.Msg("Deleting Layer " + file);
                     File.Delete(file);
                 }
             }
