@@ -19,9 +19,9 @@ namespace MelonLoader
         internal static bool Setup()
         {
 #if __ANDROID__
-            string BaseDirectory = Path.Combine(Path.Combine(Path.Combine(MelonUtils.GameDirectory, "melonloader"), "etc"), "support");
+            BaseDirectory = Path.Combine(Path.Combine(Path.Combine(MelonUtils.GameDirectory, "melonloader"), "etc"), "support");
 #else
-            string BaseDirectory = Path.Combine(Path.Combine(Path.Combine(MelonUtils.GameDirectory, "MelonLoader"), "Dependencies"), "SupportModules");
+            BaseDirectory = Path.Combine(Path.Combine(Path.Combine(MelonUtils.GameDirectory, "MelonLoader"), "Dependencies"), "SupportModules");
 #endif
             if (!Directory.Exists(BaseDirectory))
             {
@@ -29,9 +29,6 @@ namespace MelonLoader
                 return false;
             }
 
-            MelonLogger.Msg("BaseDirectory = " + BaseDirectory);
-
-#if !__ANDROID__
             LemonEnumerator<ModuleListing> enumerator = new LemonEnumerator<ModuleListing>(Modules);
             while (enumerator.MoveNext())
             {
@@ -62,13 +59,6 @@ namespace MelonLoader
                     continue;
                 }
             }
-#else
-            // TODO: gets deleted in the support folder??
-            if (!LoadInterface(Path.Combine(MelonUtils.GameDirectory, "Il2Cpp.dll")))
-            {
-                MelonLogger.Msg("Error loading Il2Cpp.dlL!");
-            }
-#endif
 
             if (Interface == null)
             {
