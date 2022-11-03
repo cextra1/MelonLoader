@@ -16,12 +16,12 @@ namespace MelonLoader
         public static void Msg(ConsoleColor txt_color, string txt) => NativeMsg(DefaultMelonColor, txt_color, null, txt);
         public static void Msg(ConsoleColor txt_color, string txt, params object[] args) => NativeMsg(DefaultMelonColor, txt_color, null, string.Format(txt, args));
 
-        
+
         public static void Warning(object obj) => NativeWarning(null, obj.ToString());
         public static void Warning(string txt) => NativeWarning(null, txt);
         public static void Warning(string txt, params object[] args) => NativeWarning(null, string.Format(txt, args));
 
-        
+
         public static void Error(object obj) => NativeError(null, obj.ToString());
         public static void Error(string txt) => NativeError(null, txt);
         public static void Error(string txt, params object[] args) => NativeError(null, string.Format(txt, args));
@@ -41,7 +41,7 @@ namespace MelonLoader
                     namesection_color = melon.ConsoleColor;
                 }
             }
-            
+
             Internal_Msg(namesection_color, txt_color, namesection, txt ?? "null");
             RunMsgCallbacks(namesection_color, txt_color, namesection, txt ?? "null");
         }
@@ -49,7 +49,7 @@ namespace MelonLoader
         private static void NativeWarning(string namesection, string txt)
         {
             namesection ??= MelonUtils.GetMelonFromStackTrace()?.Info?.Name?.Replace(" ", "_");
-            
+
             Internal_Warning(namesection, txt ?? "null");
             RunWarningCallbacks(namesection, txt ?? "null");
         }
@@ -57,7 +57,7 @@ namespace MelonLoader
         private static void NativeError(string namesection, string txt)
         {
             namesection ??= MelonUtils.GetMelonFromStackTrace()?.Info?.Name?.Replace(" ", "_");
-            
+
             Internal_Error(namesection, txt ?? "null");
             RunErrorCallbacks(namesection, txt ?? "null");
         }
@@ -108,8 +108,23 @@ namespace MelonLoader
         internal extern static void ThrowInternalFailure(string txt);
         [MethodImpl(MethodImplOptions.InternalCall)]
         public extern static void WriteSpacer();
+#if !__ANDROID__
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal extern static void Internal_PrintModName(ConsoleColor meloncolor, ConsoleColor authorcolor, string name, string author, string version, string id);
+#else
+        internal static void Internal_PrintModName(ConsoleColor meloncolor, ConsoleColor authorcolor, string name, string author, string version, string id)
+        {
+            // colors are ignored since they wouldn't show through logs or logcat
+            string log = name + " v" + version;
+            if (id != null)
+                log += " (" + id + ")";
+
+            Msg(log);
+
+            if (author != null)
+                Msg("by " + author);
+        }
+#endif
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal extern static void Flush();
 

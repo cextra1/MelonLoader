@@ -403,8 +403,7 @@ namespace MelonLoader
 
             _registeredMelons.Add(this);
 
-            // TODO: causes crash?
-            //PrintLoadInfo();
+            PrintLoadInfo();
 
             OnRegister.Invoke();
             OnMelonRegistered.Invoke(this);
