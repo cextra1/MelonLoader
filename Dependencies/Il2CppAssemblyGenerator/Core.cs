@@ -27,33 +27,43 @@ namespace MelonLoader.Il2CppAssemblyGenerator
         public override void OnInitialize()
         {
             Logger = LoggerInstance;
+            AssemblyGenerationNeeded = MelonLaunchOptions.Il2CppAssemblyGenerator.ForceRegeneration;
 
+#if !__ANDROID__
             webClient = new WebClient();
             webClient.Headers.Add("User-Agent", $"{BuildInfo.Name} v{BuildInfo.Version}");
 
-            AssemblyGenerationNeeded = MelonLaunchOptions.Il2CppAssemblyGenerator.ForceRegeneration;
-
             GameAssemblyPath = Path.Combine(MelonUtils.GameDirectory, "GameAssembly.dll");
-            ManagedPath = string.Copy(MelonUtils.GetManagedDirectory());
 
             BasePath = Path.GetDirectoryName(Assembly.Location);
+#else
+            BasePath = Path.Combine(string.Copy(MelonUtils.GetApplicationPath()), "melonloader", "etc", "assembly_generation");
+            // TODO: Read APK file instead
+            GameAssemblyPath = Path.Combine(string.Copy(MelonUtils.GetMainAssemblyLoc()));
+#endif
+
+            ManagedPath = string.Copy(MelonUtils.GetManagedDirectory());
         }
 
         private static int Run()
         {
             Config.Initialize();
 
+#if !__ANDROID__
             if (!MelonLaunchOptions.Il2CppAssemblyGenerator.OfflineMode)
                 RemoteAPI.Contact();
 
-            // Temporary Workaround for Cpp2IL Failing on Unsupported OSes
+                // Temporary Workaround for Cpp2IL Failing on Unsupported OSes
             if (!MelonUtils.IsUnderWineOrSteamProton() && ((Environment.OSVersion.Version.Major < 6) // Is Older than Vista
                 || ((Environment.OSVersion.Version.Major == 6) && (Environment.OSVersion.Version.Minor < 1)))) // Is Older than Windows 7 or Server 2008 R2
                 dumper = new Il2CppDumper();
             else
-                dumper = new Cpp2IL();
+#endif
+            dumper = new Packages.Cpp2IL();
 
             il2cppassemblyunhollower = new Il2CppAssemblyUnhollower();
+
+#if !__ANDROID__
             unitydependencies = new UnityDependencies();
             deobfuscationMap = new DeobfuscationMap();
             deobfuscationRegex = new DeobfuscationRegex();
@@ -70,15 +80,22 @@ namespace MelonLoader.Il2CppAssemblyGenerator
                 return 1;
 
             deobfuscationRegex.Setup();
+#endif
 
             string CurrentGameAssemblyHash;
             Logger.Msg("Checking GameAssembly...");
-            MelonDebug.Msg($"Last GameAssembly Hash: {Config.Values.GameAssemblyHash}");
+            //MelonDebug.Msg($"Last GameAssembly Hash: {Config.Values.GameAssemblyHash}");
+            MelonDebug.Msg($"Current GameAssembly Path: " + GameAssemblyPath);
             MelonDebug.Msg($"Current GameAssembly Hash: {CurrentGameAssemblyHash = FileHandler.Hash(GameAssemblyPath)}");
 
+#if !__ANDROID__
             if (string.IsNullOrEmpty(Config.Values.GameAssemblyHash)
                     || !Config.Values.GameAssemblyHash.Equals(CurrentGameAssemblyHash))
-                AssemblyGenerationNeeded = true;
+                    AssemblyGenerationNeeded = true;
+#else
+            // TODO: fix Config so we can store this stuff
+            AssemblyGenerationNeeded = false;
+#endif
 
             if (!AssemblyGenerationNeeded)
             {
@@ -103,16 +120,22 @@ namespace MelonLoader.Il2CppAssemblyGenerator
                 return 1;
             }
 
+#if !__ANDROID__
             OldFiles_Cleanup();
+#endif
             OldFiles_LAM();
 
             dumper.Cleanup();
             il2cppassemblyunhollower.Cleanup();
 
             Logger.Msg("Assembly Generation Successful!");
+
+#if !__ANDROID__
             deobfuscationRegex.Save();
+
             Config.Values.GameAssemblyHash = CurrentGameAssemblyHash;
             Config.Save();
+#endif
 
             return 0;
         }
@@ -142,13 +165,13 @@ namespace MelonLoader.Il2CppAssemblyGenerator
                 string filepath = filepathtbl[i];
                 string filename = Path.GetFileName(filepath);
                 Logger.Msg("Moving " + filename);
-                Config.Values.OldFiles.Add(filename);
+                //Config.Values.OldFiles.Add(filename);
                 string newfilepath = Path.Combine(ManagedPath, filename);
                 if (File.Exists(newfilepath))
                     File.Delete(newfilepath);
                 File.Move(filepath, newfilepath);
             }
-            Config.Save();
+            //Config.Save();
         }
     }
 }

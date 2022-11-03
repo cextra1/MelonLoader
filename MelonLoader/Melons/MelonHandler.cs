@@ -31,7 +31,11 @@ namespace MelonLoader
         private static bool firstSpacer = false;
         public static void LoadMelonsFromDirectory<T>(string path) where T : MelonTypeBase<T>
         {
+#if !__ANDROID__
             path = Path.GetFullPath(path);
+#else
+            path = Path.Combine(MelonUtils.GetApplicationPath(), path);
+#endif
 
             var loadingMsg = $"Loading {MelonTypeBase<T>.TypeName}s from '{path}'...";
             MelonLogger.WriteSpacer();
@@ -89,7 +93,7 @@ namespace MelonLoader
             firstSpacer = true;
         }
 
-        #region Obsolete Members
+#region Obsolete Members
         /// <summary>
         /// List of Plugins.
         /// </summary>
@@ -159,6 +163,6 @@ namespace MelonLoader
 
             MelonBase.RegisterSorted(ma.LoadedMelons);
         }
-        #endregion
+#endregion
     }
 }

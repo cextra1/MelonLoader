@@ -19,6 +19,7 @@ namespace MelonLoader
 
         private static void ValidateInterface()
         {
+            // TODO: is anything special here needed for android?
             if (!MelonUtils.IsGameIl2Cpp())
                 throw new Exception("MelonLoader.UnhollowerSupport can't be used on Non-Il2Cpp Games");
             if (SMInterface == null)

@@ -39,7 +39,11 @@ namespace MelonLoader
         public static event Action<string> ErrorCallbackHandler;
         //public static bool IsEnabled() => MelonLaunchOptions.Core.DebugMode;
 
+#if !__ANDROID__
         [MethodImpl(MethodImplOptions.InternalCall)]
         public extern static bool IsEnabled();
+#else
+        public static bool IsEnabled() => true;
+#endif
     }
 }

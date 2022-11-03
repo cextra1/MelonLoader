@@ -20,16 +20,21 @@ namespace MelonLoader
             MelonUtils.Setup(curDomain);
             Assertions.LemonAssertMapping.Setup();
 
+            // TODO: MonoLibrary stuff
+#if !__ANDROID__
             if (!MonoLibrary.Setup()
                 || !MonoResolveManager.Setup())
                 return 1;
+#endif
 
             HarmonyInstance = new HarmonyLib.Harmony(BuildInfo.Name);
 
             Fixes.ForcedCultureInfo.Install();
             Fixes.InstancePatchFix.Install();
             Fixes.ProcessFix.Install();
+#if !__ANDROID__
             PatchShield.Install();
+#endif
 
             MelonPreferences.Load();
 
@@ -47,7 +52,11 @@ namespace MelonLoader
         private static int PreStart()
         {
             MelonEvents.OnApplicationEarlyStart.Invoke();
+#if !__ANDROID__
             return MelonStartScreen.LoadAndRun(Il2CppGameSetup);
+#else
+            return Il2CppGameSetup();
+#endif
         }
 
         private static int Il2CppGameSetup()

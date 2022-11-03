@@ -30,10 +30,13 @@ namespace MelonLoader.Support
                 LogSupport.TraceHandler += MelonLogger.Msg;
 
             ClassInjector.Detour = new UnhollowerDetour();
-            UnityVersionHandler.Initialize(
+            // TODO: this is broken
+            /*UnityVersionHandler.Initialize(
                 InternalUtils.UnityInformationHandler.EngineVersion.Major,
                 InternalUtils.UnityInformationHandler.EngineVersion.Minor,
-                InternalUtils.UnityInformationHandler.EngineVersion.Build);
+                InternalUtils.UnityInformationHandler.EngineVersion.Build);*/
+            MelonLogger.Msg("Forcing 2021.3.5!");
+            UnityVersionHandler.Initialize(2021, 3, 5);
 
             if (MelonLaunchOptions.Console.CleanUnityLogs)
                 ConsoleCleaner();
@@ -42,7 +45,7 @@ namespace MelonLoader.Support
 
             MonoEnumeratorWrapper.Register();
 
-            ClassInjector.RegisterTypeInIl2Cpp<SM_Component>();
+            ClassInjector.RegisterTypeInIl2Cpp<SM_Component>(true);
             SM_Component.Create();
 
             unhollower = new UnhollowerInterface();
@@ -57,6 +60,10 @@ namespace MelonLoader.Support
         private static Type streamType = null;
         private static void ConsoleCleaner()
         {
+            Il2CppSystem.Console.SetOut(new Il2CppSystem.IO.StreamWriter(Il2CppSystem.IO.Stream.Null));
+#if __ANDROID__
+            return;
+#endif
             // Il2CppSystem.Console.SetOut(new Il2CppSystem.IO.StreamWriter(Il2CppSystem.IO.Stream.Null));
             try
             {

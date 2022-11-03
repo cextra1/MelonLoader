@@ -18,15 +18,15 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<Reference Include="0Harmony">
-			<HintPath>$(SolutionDir)Output\$(Configuration)\MelonLoader\0Harmony.dll</HintPath>
+			<HintPath>$(SolutionDir)Output\$(Configuration)\Android\MelonLoader\0Harmony.dll</HintPath>
 			<Private>false</Private>
 		</Reference>
 		<Reference Include="AssetRipper.VersionUtilities">
-			<HintPath>$(SolutionDir)Output\$(Configuration)\MelonLoader\AssetRipper.VersionUtilities.dll</HintPath>
+			<HintPath>$(SolutionDir)Output\$(Configuration)\Android\MelonLoader\AssetRipper.VersionUtilities.dll</HintPath>
 			<Private>false</Private>
 		</Reference>
 		<Reference Include="Tomlet">
-			<HintPath>$(SolutionDir)Output\$(Configuration)\MelonLoader\Tomlet.dll</HintPath>
+			<HintPath>$(SolutionDir)Output\$(Configuration)\Android\MelonLoader\Tomlet.dll</HintPath>
 			<Private>false</Private>
 		</Reference>
 	</ItemGroup>

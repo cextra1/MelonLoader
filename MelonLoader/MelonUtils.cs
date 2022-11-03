@@ -28,8 +28,12 @@ namespace MelonLoader
         internal static void Setup(AppDomain domain)
         {
             HashCode = string.Copy(Internal_GetHashCode());
-            BaseDirectory = string.Copy(Internal_GetBaseDirectory());
             GameDirectory = string.Copy(Internal_GetGameDirectory());
+#if !__ANDROID__
+            BaseDirectory = string.Copy(Internal_GetBaseDirectory());
+#else
+            BaseDirectory = GameDirectory;
+#endif
             SetCurrentDomainBaseDirectory(GameDirectory, domain);
 
             UserDataDirectory = Path.Combine(BaseDirectory, "UserData");
@@ -388,8 +392,12 @@ namespace MelonLoader
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         public extern static bool IsGame32Bit();
+#if !__ANDROID__
         [MethodImpl(MethodImplOptions.InternalCall)]
         public extern static bool IsGameIl2Cpp();
+#else
+        public static bool IsGameIl2Cpp() => true;
+#endif
         [MethodImpl(MethodImplOptions.InternalCall)]
         public extern static bool IsOldMono();
         [MethodImpl(MethodImplOptions.InternalCall)]
@@ -404,6 +412,9 @@ namespace MelonLoader
         [return: MarshalAs(UnmanagedType.LPStr)]
         public extern static string GetManagedDirectory();
         [MethodImpl(MethodImplOptions.InternalCall)]
+        [return: MarshalAs(UnmanagedType.LPStr)]
+        public extern static string GetMainAssemblyLoc();
+        [MethodImpl(MethodImplOptions.InternalCall)]
         public extern static void SetConsoleTitle([MarshalAs(UnmanagedType.LPStr)] string title);
         [MethodImpl(MethodImplOptions.InternalCall)]
         [return: MarshalAs(UnmanagedType.LPStr)]
@@ -413,10 +424,17 @@ namespace MelonLoader
         public extern static void NativeHookAttach(IntPtr target, IntPtr detour);
         [MethodImpl(MethodImplOptions.InternalCall)]
         public extern static void NativeHookDetach(IntPtr target, IntPtr detour);
-
+#if __ANDROID__
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [return: MarshalAs(UnmanagedType.LPStr)]
+        private extern static string Internal_GetGamePackage();
+#else
+        private static string Internal_GetGamePackage() => null;
+#endif
         [MethodImpl(MethodImplOptions.InternalCall)]
         [return: MarshalAs(UnmanagedType.LPStr)]
         private extern static string Internal_GetBaseDirectory();
+
         [MethodImpl(MethodImplOptions.InternalCall)]
         [return: MarshalAs(UnmanagedType.LPStr)]
         private extern static string Internal_GetGameDirectory();

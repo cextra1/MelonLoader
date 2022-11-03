@@ -28,7 +28,8 @@ namespace MelonLoader.InternalUtils
 
             if (!string.IsNullOrEmpty(MelonLaunchOptions.Core.UnityVersion))
             {
-                try { EngineVersion = UnityVersion.Parse(MelonLaunchOptions.Core.UnityVersion); }
+                // TODO: unity version junk
+                try { EngineVersion = UnityVersion.Parse("2021.3.5"); }
                 catch (Exception ex)
                 {
                     if (MelonDebug.IsEnabled())
@@ -59,7 +60,9 @@ namespace MelonLoader.InternalUtils
             if (string.IsNullOrEmpty(GameName))
                 GameName = DefaultInfo;
 
+#if !__ANDROID__
             SetDefaultConsoleTitleWithGameName(GameName, GameVersion);
+#endif
             if (string.IsNullOrEmpty(GameVersion))
                 GameVersion = DefaultInfo;
 

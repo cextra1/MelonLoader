@@ -1,21 +1,64 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+	<ItemGroup Label="ProjectConfigurations">
+		<ProjectConfiguration Include="Debug|Windows">
+			<Configuration>Debug</Configuration>
+			<Platform>Windows</Platform>
+		</ProjectConfiguration>
+		<ProjectConfiguration Include="Release|Windows">
+			<Configuration>Release</Configuration>
+			<Platform>Windows</Platform>
+		</ProjectConfiguration>
+		<ProjectConfiguration Include="Debug|Android">
+			<Configuration>Debug</Configuration>
+			<Platform>Android</Platform>
+		</ProjectConfiguration>
+		<ProjectConfiguration Include="Release|Android">
+			<Configuration>Release</Configuration>
+			<Platform>Android</Platform>
+		</ProjectConfiguration>
+	</ItemGroup>
 	<PropertyGroup>
 		<TargetFramework>net35</TargetFramework>
 		<LangVersion>Latest</LangVersion>
 		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-		<OutputPath>$(SolutionDir)Output\$(Configuration)\MelonLoader\</OutputPath>
+		<OutputPath>$(SolutionDir)Output\$(Configuration)\$(Platform)\MelonLoader\</OutputPath>
 		<DocumentationFile>..\Output\$(Configuration)\MelonLoader\MelonLoader.xml</DocumentationFile>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<Platforms>Windows;Android</Platforms>
 	</PropertyGroup>
-	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+	<PropertyGroup Condition="'$(Platform)' == 'Desktop'">
+		<PlatformTarget>
+		</PlatformTarget>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|Desktop' ">
+		<DebugSymbols>true</DebugSymbols>
 		<DebugType>full</DebugType>
-		<DefineConstants>TRACE;NET35;DEBUG</DefineConstants>
+		<Optimize>false</Optimize>
+		<DefineConstants>TRACE;DEBUG;NET35;PORT_DISABLE</DefineConstants>
 	</PropertyGroup>
-	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Desktop' ">
+		<PlatformTarget>AnyCPU</PlatformTarget>
+		<DebugSymbols>false</DebugSymbols>
 		<DebugType>None</DebugType>
-		<DefineConstants>NET35</DefineConstants>
+		<Optimize>true</Optimize>
+		<DefineConstants>NET35;PORT_DISABLE</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Platform)' == 'Android'">
+		<ErrorReport>prompt</ErrorReport>
+		<WarningLevel>4</WarningLevel>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|Android' ">
+		<DebugSymbols>true</DebugSymbols>
+		<DebugType>portable</DebugType>
+		<Optimize>false</Optimize>
+		<DefineConstants>TRACE;DEBUG;__ANDROID__</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Android' ">
+		<DebugSymbols>false</DebugSymbols>
+		<DebugType>None</DebugType>
+		<Optimize>true</Optimize>
 	</PropertyGroup>
 	<PropertyGroup>
 		<RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
