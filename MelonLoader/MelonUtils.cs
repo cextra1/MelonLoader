@@ -34,6 +34,8 @@ namespace MelonLoader
 #else
             BaseDirectory = GameDirectory;
 #endif
+            GamePackage = Internal_GetGamePackage();
+
             SetCurrentDomainBaseDirectory(GameDirectory, domain);
 
             UserDataDirectory = Path.Combine(BaseDirectory, "UserData");
@@ -57,6 +59,7 @@ namespace MelonLoader
 
         public static string BaseDirectory { get; private set; }
         public static string GameDirectory { get; private set; }
+        public static string GamePackage { get; private set; }
         public static string MelonLoaderDirectory { get; private set; }
         public static string UserDataDirectory { get; private set; }
         public static string UserLibsDirectory { get; private set; }
