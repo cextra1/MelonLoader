@@ -6,7 +6,7 @@ namespace MelonLoader.Fixes
 	{
 		internal static void Install()
 		{
-			Core.HarmonyInstance.Patch(typeof(DateTime).GetProperty("Now").GetGetMethod(), typeof(ForcedCultureInfo).GetMethod("DateTimeNow").ToNewHarmonyMethod());
+			Core.HarmonyInstance.Patch(typeof(DateTime).GetProperty("Now").GetGetMethod(), typeof(DateTimeOverride).GetMethod(nameof(DateTimeNow)).ToNewHarmonyMethod());
 		}
 
 		public static bool DateTimeNow(ref DateTime __result)
