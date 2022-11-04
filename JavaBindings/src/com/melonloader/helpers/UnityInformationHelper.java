@@ -15,6 +15,9 @@ import java.io.InputStream;
 
 public class UnityInformationHelper
 {
+    // TODO: add a way to handle APKs without globalgamemanagers
+    // MelonLoader uses data.unity3d and mainData for PC,
+    // but making copies of those would use a lot of storage I believe
     public static void SaveGlobalGameManagersToFile()
     {
         AssetManager am = ApplicationState.Context.getAssets();
