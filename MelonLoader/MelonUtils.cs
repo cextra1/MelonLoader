@@ -53,7 +53,11 @@ namespace MelonLoader
             UnityInformationHandler.Setup();
 
             CurrentGameAttribute = new MelonGameAttribute(UnityInformationHandler.GameDeveloper, UnityInformationHandler.GameName);
+#if __ANDROID__
+            CurrentPlatform = MelonPlatformAttribute.CompatiblePlatforms.ANDROID;
+#else
             CurrentPlatform = IsGame32Bit() ? MelonPlatformAttribute.CompatiblePlatforms.WINDOWS_X86 : MelonPlatformAttribute.CompatiblePlatforms.WINDOWS_X64; // Temporarily
+#endif
             CurrentDomain = IsGameIl2Cpp() ? MelonPlatformDomainAttribute.CompatibleDomains.IL2CPP : MelonPlatformDomainAttribute.CompatibleDomains.MONO;
         }
 
