@@ -84,18 +84,12 @@ namespace MelonLoader.Il2CppAssemblyGenerator
 
             string CurrentGameAssemblyHash;
             Logger.Msg("Checking GameAssembly...");
-            //MelonDebug.Msg($"Last GameAssembly Hash: {Config.Values.GameAssemblyHash}");
-            MelonDebug.Msg($"Current GameAssembly Path: " + GameAssemblyPath);
+            MelonDebug.Msg($"Last GameAssembly Hash: {Config.Values.GameAssemblyHash}");
             MelonDebug.Msg($"Current GameAssembly Hash: {CurrentGameAssemblyHash = FileHandler.Hash(GameAssemblyPath)}");
 
-#if !__ANDROID__
             if (string.IsNullOrEmpty(Config.Values.GameAssemblyHash)
                     || !Config.Values.GameAssemblyHash.Equals(CurrentGameAssemblyHash))
                     AssemblyGenerationNeeded = true;
-#else
-            // TODO: fix Config so we can store this stuff
-            AssemblyGenerationNeeded = false;
-#endif
 
             if (!AssemblyGenerationNeeded)
             {
@@ -120,9 +114,7 @@ namespace MelonLoader.Il2CppAssemblyGenerator
                 return 1;
             }
 
-#if !__ANDROID__
             OldFiles_Cleanup();
-#endif
             OldFiles_LAM();
 
             dumper.Cleanup();
@@ -132,10 +124,9 @@ namespace MelonLoader.Il2CppAssemblyGenerator
 
 #if !__ANDROID__
             deobfuscationRegex.Save();
-
+#endif
             Config.Values.GameAssemblyHash = CurrentGameAssemblyHash;
             Config.Save();
-#endif
 
             return 0;
         }
@@ -165,13 +156,13 @@ namespace MelonLoader.Il2CppAssemblyGenerator
                 string filepath = filepathtbl[i];
                 string filename = Path.GetFileName(filepath);
                 Logger.Msg("Moving " + filename);
-                //Config.Values.OldFiles.Add(filename);
+                Config.Values.OldFiles.Add(filename);
                 string newfilepath = Path.Combine(ManagedPath, filename);
                 if (File.Exists(newfilepath))
                     File.Delete(newfilepath);
                 File.Move(filepath, newfilepath);
             }
-            //Config.Save();
+            Config.Save();
         }
     }
 }

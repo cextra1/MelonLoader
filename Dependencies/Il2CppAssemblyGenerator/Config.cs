@@ -12,7 +12,6 @@ namespace MelonLoader.Il2CppAssemblyGenerator
 
         internal static void Initialize()
         {
-#if !__ANDROID__
             FilePath = Path.Combine(Core.BasePath, "Config.cfg");
 
             Category = MelonPreferences.CreateCategory<AssemblyGeneratorConfiguration>("Il2CppAssemblyGenerator");
@@ -23,7 +22,6 @@ namespace MelonLoader.Il2CppAssemblyGenerator
 
             if (!File.Exists(FilePath))
                 Save();
-#endif
         }
 
         internal static void Save() => Category.SaveToFile(false);
