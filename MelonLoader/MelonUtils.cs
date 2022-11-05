@@ -35,6 +35,9 @@ namespace MelonLoader
             BaseDirectory = GameDirectory;
 #endif
             GamePackage = Internal_GetGamePackage();
+            GameName = Internal_GetGameName();
+            GameDeveloper = Internal_GetGameDeveloper();
+            UnityVersion = GetUnityVersion();
 
             SetCurrentDomainBaseDirectory(GameDirectory, domain);
 
@@ -387,6 +390,23 @@ namespace MelonLoader
             return classPackage;
         }
 
+#if __ANDROID__
+        // TODO: can't read globalgamemanagers for some reason, going back to native stuff
+        public static string UnityVersion { get; private set; }
+        public static string GameDeveloper { get; private set; }
+        public static string GameName { get; private set; }
+        public static string GameVersion => null;
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [return: MarshalAs(UnmanagedType.LPStr)]
+        private extern static string Internal_GetGameName();
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [return: MarshalAs(UnmanagedType.LPStr)]
+        private extern static string Internal_GetGameDeveloper();
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        [return: MarshalAs(UnmanagedType.LPStr)]
+        public extern static string GetUnityVersion();
+#else
         [Obsolete("MelonLoader.MelonUtils.GetUnityVersion() is obsolete. Please use MelonLoader.InternalUtils.UnityInformationHandler.EngineVersion instead.")]
         public static string GetUnityVersion() => UnityInformationHandler.EngineVersion.ToStringWithoutType();
         [Obsolete("MelonLoader.MelonUtils.GameDeveloper is obsolete. Please use MelonLoader.InternalUtils.UnityInformationHandler.GameDeveloper instead.")]
@@ -395,6 +415,7 @@ namespace MelonLoader
         public static string GameName { get => UnityInformationHandler.GameName; }
         [Obsolete("MelonLoader.MelonUtils.GameVersion is obsolete. Please use MelonLoader.InternalUtils.UnityInformationHandler.GameVersion instead.")]
         public static string GameVersion { get => UnityInformationHandler.GameVersion; }
+#endif
 
 
         [MethodImpl(MethodImplOptions.InternalCall)]

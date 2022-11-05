@@ -37,7 +37,8 @@ public class InjectionHelper {
         ContextHelper.DefineContext(context);
 
         AssemblyHelper.InstallAssemblies();
-        UnityInformationHelper.SaveGlobalGameManagersToFile();
+        // AssetsTools can't read the data, unsure why
+        //UnityInformationHelper.SaveGlobalGameManagersToFile();
 
         Bootstrap.Initialize();
     }

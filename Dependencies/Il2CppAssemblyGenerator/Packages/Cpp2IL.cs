@@ -117,9 +117,7 @@ namespace MelonLoader.Il2CppAssemblyGenerator.Packages
                 Directory.CreateDirectory(output);
             //Core.OverrideAppDomainBase(output);
 
-            // TODO: make the unity version dynamic
             var engineVersionInfo = InternalUtils.UnityInformationHandler.EngineVersion;
-            MelonLogger.Msg($"{engineVersionInfo.Major}, {engineVersionInfo.Minor}, {engineVersionInfo.Build}");
             var engineVersionArray = new int[3] { engineVersionInfo.Major, engineVersionInfo.Minor, engineVersionInfo.Build };
             Cpp2IlApi.InitializeLibCpp2Il(gameAssembly, metadata, engineVersionArray, false);
 

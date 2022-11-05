@@ -30,13 +30,10 @@ namespace MelonLoader.Support
                 LogSupport.TraceHandler += MelonLogger.Msg;
 
             ClassInjector.Detour = new UnhollowerDetour();
-            // TODO: this is broken
-            /*UnityVersionHandler.Initialize(
+            UnityVersionHandler.Initialize(
                 InternalUtils.UnityInformationHandler.EngineVersion.Major,
                 InternalUtils.UnityInformationHandler.EngineVersion.Minor,
-                InternalUtils.UnityInformationHandler.EngineVersion.Build);*/
-            MelonLogger.Msg("Forcing 2021.3.5!");
-            UnityVersionHandler.Initialize(2021, 3, 5);
+                InternalUtils.UnityInformationHandler.EngineVersion.Build);
 
             if (MelonLaunchOptions.Console.CleanUnityLogs)
                 ConsoleCleaner();

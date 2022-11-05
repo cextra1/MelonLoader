@@ -28,7 +28,6 @@ namespace MelonLoader.InternalUtils
 
             if (!string.IsNullOrEmpty(MelonLaunchOptions.Core.UnityVersion))
             {
-                // TODO: unity version junk
                 try { EngineVersion = UnityVersion.Parse(MelonLaunchOptions.Core.UnityVersion); }
                 catch (Exception ex)
                 {
@@ -37,9 +36,16 @@ namespace MelonLoader.InternalUtils
                 }
             }
 
+#if !__ANDROID__
             AssetsManager assetsManager = new AssetsManager();
             ReadGameInfo(assetsManager, gameDataPath);
             assetsManager.UnloadAll();
+#else
+            GameName = MelonUtils.GameName;
+            GameDeveloper = MelonUtils.GameDeveloper;
+            EngineVersion = UnityVersion.Parse(MelonUtils.UnityVersion);
+            GameVersion = MelonUtils.GameVersion;
+#endif
 
             if (string.IsNullOrEmpty(GameDeveloper)
                 || string.IsNullOrEmpty(GameName))
