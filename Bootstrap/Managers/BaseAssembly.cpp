@@ -1,81 +1,67 @@
 #include "BaseAssembly.h"
-#include "../Utils/Debug.h"
-#include "../Core.h"
+#include "../Utils/Console/Debug.h"
 #include "Game.h"
 #include <string>
 #include "../Utils/Assertion.h"
-#include "../Utils/Logging/Logger.h"
+#include "../Utils/Console/Logger.h"
 #include "../Utils/Il2CppAssemblyGenerator.h"
 
 char* BaseAssembly::PathMono = NULL;
 char* BaseAssembly::PreloadPath = NULL;
-Mono::Method* BaseAssembly::Mono_Start = NULL;
 Mono::Method* BaseAssembly::Mono_PreStart = NULL;
-Mono::Method* BaseAssembly::AssemblyManager_Resolve = NULL;
-Mono::Method* BaseAssembly::AssemblyManager_LoadInfo = NULL;
+Mono::Method* BaseAssembly::Mono_Start = NULL;
+Mono::Assembly* BaseAssembly::Assembly = NULL;
+Mono::Image* BaseAssembly::Image = NULL;
 
-bool BaseAssembly::Initialize()
+bool BaseAssembly::LoadAssembly()
 {
-	Preload();
-	Debug::Msg("Initializing Base Assembly...");
-	Mono::Assembly* assembly = Mono::Exports::mono_domain_assembly_open(Mono::domain, PathMono);
-	if (assembly == NULL)
+	Assembly = Mono::Exports::mono_domain_assembly_open(Mono::domain, PathMono);
+	if (Assembly == NULL)
 	{
 		Assertion::ThrowInternalFailure("Failed to Open Mono Assembly!");
 		return false;
 	}
-	Mono::Image* image = Mono::Exports::mono_assembly_get_image(assembly);
-	if (image == NULL)
+	Image = Mono::Exports::mono_assembly_get_image(Assembly);
+	if (Image == NULL)
 	{
 		Assertion::ThrowInternalFailure("Failed to Get Image from Mono Assembly!");
 		return false;
 	}
-	Mono::Class* klass = Mono::Exports::mono_class_from_name(image, "MelonLoader", "Core");
-	if (image == NULL)
+
+	return true;
+}
+
+bool BaseAssembly::Initialize()
+{
+	Debug::Msg("Initializing Base Assembly...");
+	Mono::Class* klass = Mono::Exports::mono_class_from_name(Image, "MelonLoader", "Core");
+	if (klass == NULL)
 	{
-		Assertion::ThrowInternalFailure("Failed to Get MelonLoader.Core from Mono Image!");
+		Assertion::ThrowInternalFailure("Failed to Get Class from Mono Image!");
 		return false;
 	}
 	Mono::Method* Mono_Initialize = Mono::Exports::mono_class_get_method_from_name(klass, "Initialize", NULL);
 	if (Mono_Initialize == NULL)
 	{
-		Assertion::ThrowInternalFailure("Failed to Get MelonLoader.Core.Initialize!");
+		Assertion::ThrowInternalFailure("Failed to Get Initialize Method from Mono Class!");
 		return false;
 	}
+
 	Mono_PreStart = Mono::Exports::mono_class_get_method_from_name(klass, "PreStart", NULL);
 	if (Mono_PreStart == NULL)
 	{
-		Assertion::ThrowInternalFailure("Failed to Get MelonLoader.Core.PreStart!");
+		Assertion::ThrowInternalFailure("Failed to Get PreStart Method from Mono Class!");
 		return false;
 	}
+	
 	Mono_Start = Mono::Exports::mono_class_get_method_from_name(klass, "Start", NULL);
 	if (Mono_Start == NULL)
 	{
-		Assertion::ThrowInternalFailure("Failed to Get MelonLoader.Core.Start!");
+		Assertion::ThrowInternalFailure("Failed to Get Start Method from Mono Class!");
 		return false;
 	}
-
-	Mono::Class* klass_AssemblyManager = Mono::Exports::mono_class_from_name(image, "MelonLoader.MonoInternals.ResolveInternals", "AssemblyManager");
-	if (klass_AssemblyManager == NULL)
-	{
-		Assertion::ThrowInternalFailure("Failed to Get MelonLoader.MonoInternals.ResolveInternals.AssemblyManager from Mono Image!");
-		return false;
-	}
-	AssemblyManager_Resolve = Mono::Exports::mono_class_get_method_from_name(klass_AssemblyManager, "Resolve", 6);
-	if (AssemblyManager_Resolve == NULL)
-	{
-		Assertion::ThrowInternalFailure("Failed to Get MelonLoader.MonoInternals.ResolveInternals.AssemblyManager.Resolve!");
-		return false;
-	}
-	AssemblyManager_LoadInfo = Mono::Exports::mono_class_get_method_from_name(klass_AssemblyManager, "LoadInfo", 1);
-	if (AssemblyManager_LoadInfo == NULL)
-	{
-		Assertion::ThrowInternalFailure("Failed to Get MelonLoader.MonoInternals.ResolveInternals.AssemblyManager.LoadInfo!");
-		return false;
-	}
-
+	
 	Logger::WriteSpacer();
-
 	Mono::Object* exObj = NULL;
 	Mono::Object* result = Mono::Exports::mono_runtime_invoke(Mono_Initialize, NULL, NULL, &exObj);
 	if (exObj != NULL)
@@ -84,52 +70,17 @@ bool BaseAssembly::Initialize()
 		Assertion::ThrowInternalFailure("Failed to Invoke Initialize Method!");
 		return false;
 	}
+	
 	int returnval = *(int*)((char*)result + 0x8);
+#ifndef PORT_DISABLE
+	if (Game::IsIl2Cpp)
+		Il2CppAssemblyGenerator::Cleanup();
+#endif
 	Debug::Msg(("Return Value = " + std::to_string(returnval)).c_str());
 	if (Debug::Enabled)
 		Logger::WriteSpacer();
+
 	return (returnval == 0);
-}
-
-void BaseAssembly::Preload()
-{
-	if (Game::IsIl2Cpp || !Mono::IsOldMono)
-		return;
-
-	std::string PreloadAssemblyPath = std::string(Core::BasePath) + "\\MelonLoader\\Dependencies\\SupportModules\\Preload.dll";
-	if (!Game::IsIl2Cpp && !Core::FileExists(PreloadAssemblyPath.c_str()))
-	{
-		Assertion::ThrowInternalFailure("Preload.dll Does Not Exist!");
-		return;
-	}
-
-	Debug::Msg("Initializing Preload Assembly...");
-	Mono::Assembly* assembly = Mono::Exports::mono_domain_assembly_open(Mono::domain, PreloadAssemblyPath.c_str());
-	if (assembly == NULL)
-	{
-		Assertion::ThrowInternalFailure("Failed to Open Preload Assembly!");
-		return;
-	}
-	Mono::Image* image = Mono::Exports::mono_assembly_get_image(assembly);
-	if (image == NULL)
-	{
-		Assertion::ThrowInternalFailure("Failed to Get Image from Preload Assembly!");
-		return;
-	}
-	Mono::Class* klass = Mono::Exports::mono_class_from_name(image, "MelonLoader.Support", "Preload");
-	if (image == NULL)
-	{
-		Assertion::ThrowInternalFailure("Failed to Get Class from Preload Image!");
-		return;
-	}
-	Mono::Method* initialize = Mono::Exports::mono_class_get_method_from_name(klass, "Initialize", NULL);
-	if (initialize == NULL)
-	{
-		Assertion::ThrowInternalFailure("Failed to Get Initialize Method from Preload Class!");
-		return;
-	}
-	Mono::Object* exObj = NULL;
-	Mono::Exports::mono_runtime_invoke(initialize, NULL, NULL, &exObj);
 }
 
 bool BaseAssembly::PreStart()
@@ -171,4 +122,9 @@ void BaseAssembly::Start()
 	Debug::Msg(("Return Value = " + std::to_string(returnval)).c_str());
 	if (Debug::Enabled)
 		Logger::WriteSpacer();
+}
+
+bool BaseAssembly::SetupPaths()
+{
+	return false;
 }

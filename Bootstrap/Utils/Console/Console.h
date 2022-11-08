@@ -1,18 +1,21 @@
 #pragma once
-#include <Windows.h>
 #include <string>
+
+#ifdef _WIN32
+#include <Windows.h>
+#endif
 
 class Console
 {
 public:
-	static HANDLE OutputHandle;
-	static HANDLE InputHandle;
+#ifdef _WIN32
+    static HANDLE OutputHandle;
+#endif
 	static bool ShouldHide;
 	static bool ShouldSetTitle;
 	static bool AlwaysOnTop;
 	static bool HideWarnings;
-	static bool UseLegacyColoring;
-	static bool CleanUnityLogs;
+	static bool UseManualColoring;
 	enum DisplayMode
 	{
 		NORMAL,
@@ -23,14 +26,25 @@ public:
 	};
 	static DisplayMode Mode;
 
+#ifdef _WIN32
+    static void SetTitle(const char* title) { if (ShouldSetTitle) SetConsoleTitleA(title); }
+    static BOOL WINAPI EventHandler(DWORD evt);
+
+    static void SetHandles();
+	static void NullHandles();
+
+    static void SetDefaultTitle();
+    static void SetDefaultTitleWithGameName(const char* GameVersion = NULL);
+    static void EnableCloseButton();
+    static void DisableCloseButton();
+#endif
+
 	static bool Initialize();
 	static void Flush();
 	static void Close();
-	static void SetTitle(const char* title) { if (ShouldSetTitle) SetConsoleTitleA(title); }
-	static void SetDefaultTitle();
-	static void SetDefaultTitleWithGameName(const char* GameName, const char* GameVersion = NULL);
 	enum Color
 	{
+	    Reset = -1,
 		Black = 0,
 		DarkBlue = 1,
 		DarkGreen = 2,
@@ -49,16 +63,15 @@ public:
 		White = 15
 	};
 	static std::string ColorToAnsi(Color color, bool modecheck = true);
-	static void EnableCloseButton(HWND mainWindow);
-	static void DisableCloseButton(HWND mainWindow);
-	static BOOL WINAPI EventHandler(DWORD evt);
-	static void SetHandles();
-	static void NullHandles();
-	static bool IsInitialized() { return ((Window != NULL) && (Menu != NULL) && (OutputHandle != NULL)); }
 
 private:
+#ifdef _WIN32
 	static HWND Window;
 	static HMENU Menu;
+	static bool IsInitialized() { return ((Window != NULL) && (Menu != NULL) && (OutputHandle != NULL)); }
+#elif defined(__ANDROID__)
+    static bool IsInitialized() { return true; }
+#endif
 	static int rainbow;
 	static Color GetRainbowColor();
 };

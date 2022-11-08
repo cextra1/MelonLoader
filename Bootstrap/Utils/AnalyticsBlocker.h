@@ -1,5 +1,10 @@
+#ifndef PORT_DISABLE
 #pragma once
+
+#ifdef _WIN32
 #include <Windows.h>
+#endif
+
 #include <list>
 #include <string>
 
@@ -9,10 +14,10 @@ public:
 	static bool ShouldDAB;
 	static bool Initialize();
 	static void Hook();
-	static bool CheckHostNameOrIP(const char* host_name_or_ip);
-	static bool ShouldBlock(const char* host_name_or_ip);
-	static bool HasDabbed(const char* host_name_or_ip);
+	static bool CheckHostNames(const char* url);
 
+#ifndef _WIN64
+#ifdef _WIN32
 	class wsock32
 	{
 	public:
@@ -23,7 +28,7 @@ public:
 		{
 		public:
 			static bool Initialize();
-			typedef hostent* (__stdcall* gethostbyname_t) (const char* name);
+			typedef void* (__stdcall* gethostbyname_t) (const char* name);
 			static gethostbyname_t Gethostbyname;
 		};
 
@@ -31,9 +36,11 @@ public:
 		{
 		public:
 			static void Initialize();
-			static hostent* Gethostbyname(const char* name);
+			static void* Gethostbyname(const char* name);
 		};
 	};
+#endif
+#endif
 
 #ifdef _WIN64
 	class ws2_32
@@ -46,7 +53,7 @@ public:
 		{
 		public:
 			static bool Initialize();
-			typedef DWORD (__stdcall* getaddrinfo_t) (PCSTR pNodeName, PCSTR pServiceName, const void* pHints, void* ppResult);
+			typedef int(__stdcall* getaddrinfo_t) (PCSTR pNodeName, PCSTR pServiceName, void* pHints, void* ppResult);
 			static getaddrinfo_t Getaddrinfo;
 		};
 
@@ -54,12 +61,13 @@ public:
 		{
 		public:
 			static void Initialize();
-			static DWORD Getaddrinfo(PCSTR pNodeName, PCSTR pServiceName, const void* pHints, void* ppResult);
+			static int Getaddrinfo(PCSTR pNodeName, PCSTR pServiceName, void* pHints, void* ppResult);
 		};
 	};
 #endif
 
 private:
-	static const char* BlockedList[];
-	static std::list<std::string> DABList;
+	static std::list<std::string> HostNames;
+	static std::list<std::string> HostNames_DAB;
 };
+#endif

@@ -1,29 +1,50 @@
-#include <Windows.h>
-#include <VersionHelpers.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sstream>
+#include <time.h>
+
 #include "Core.h"
 #include "Managers/Game.h"
 #include "Managers/Mono.h"
 #include "Managers/Il2Cpp.h"
 #include "Managers/Hook.h"
-#include "Utils/CommandLine.h"
-#include "Utils/Console.h"
+#include "Utils/Console/CommandLine.h"
+#include "Utils/Console/Console.h"
 #include "Utils/Assertion.h"
-#include "Utils/Logging/Logger.h"
-#include "Utils/Debug.h"
+#include "Utils/Console/Logger.h"
+#include "Utils/Console/Debug.h"
 #include "Utils/AnalyticsBlocker.h"
 #include "Utils/HashCode.h"
-#include "Utils/Encoding.h"
+#include "Utils/Sequence.h"
 
+#ifdef _WIN32
+#include <Windows.h>
+#include <VersionHelpers.h>
+#elif defined(__ANDROID__)
+#include <unistd.h>
+
+#include "./Managers/AndroidData.h"
+#include "./Managers/AssetManagerHelper.h"
+#include "./Managers/StaticSettings.h"
+#include "./Utils/AssemblyUnhollower/XrefScannerBindings.h"
+#include "Managers/BHapticsBridge.h"
+
+#endif
+
+#ifdef _WIN32
 HINSTANCE Core::Bootstrap = NULL;
-char* Core::BasePath = NULL;
-char* Core::BasePathMono = NULL;
-char* Core::Path = NULL;
-std::string Core::Version = "0.5.7";
-bool Core::Is_ALPHA_PreRelease = false;
 Core::wine_get_version_t Core::wine_get_version = NULL;
+#elif defined(__ANDROID__)
+JavaVM* Core::Bootstrap = NULL;
+JNIEnv* Core::Env = NULL;
+#endif
+
+char* Core::Path = NULL;
+
+// FIXME: this should be moved to preprocessor define
+std::string Core::Version = "0.4.1";
+std::string Core::ReleaseType = "Android Development Build";
+//std::string Core::ReleaseType = "Open-Beta";
 
 std::string Core::GetVersionStr()
 {
@@ -32,127 +53,219 @@ std::string Core::GetVersionStr()
 		versionstr += "Lemon";
 	else
 		versionstr += "Melon";
-	versionstr += "Loader v" + Version + " ";
-	if (Is_ALPHA_PreRelease)
-		versionstr += "ALPHA Pre-Release";
-	else
-		versionstr += "Open-Beta";
+	versionstr += "Loader v" + Version;
+	if (ReleaseType.size() == 0)
+		versionstr += " " + ReleaseType;
 	return versionstr;
 }
 
-std::string Core::GetVersionStrWithGameName(const char* GameName, const char* GameVersion)
+std::string Core::GetVersionStrWithGameName(const char* GameVersion)
 {
-	return (GetVersionStr()
-		+ " - "
-		+ GameName
-		+ " "
-		+ ((GameVersion == NULL)
-			? ""
-			: GameVersion));
+    std::string acc = GetVersionStr() + " - " + Game::Name;
+
+    if (GameVersion != NULL)
+        acc += GameVersion;
+
+    return acc;
 }
 
-void Core::Initialize(HINSTANCE hinstDLL)
+bool Core::Inject()
 {
-	Bootstrap = hinstDLL;
-	SetBasePath();
-	SetupWineCheck();
+    std::vector<Sequence::Element> Sequence = {
+            {
+                    "Checking OS compatibility",
+                    OSVersionCheck
+            },
+            {
+                    "Initializing Console Handle",
+                    Console::Initialize
+            },
+            {
+                    "Initializing Logging Service",
+                    Logger::Initialize
+            },
+    };
 
-	if (!OSVersionCheck() 
-		|| !Game::Initialize())
-		return;
-
-	CommandLine::Read();
-	if (!Console::Initialize()
-		|| !Logger::Initialize()
-		|| !CheckPathASCII()
-		|| !HashCode::Initialize()
-		|| !Mono::Initialize())
-		return;
-
-	WelcomeMessage();
-
-	if (!AnalyticsBlocker::Initialize()
-		|| !Il2Cpp::Initialize()
-		|| !Mono::Load())
-		return;
-
-	AnalyticsBlocker::Hook();
-
-	if (Game::IsIl2Cpp)
-	{
-		Debug::Msg("Attaching Hook to il2cpp_init...");
-		Hook::Attach(&(LPVOID&)Il2Cpp::Exports::il2cpp_init, Il2Cpp::Hooks::il2cpp_init);
-	}
-	else
-	{
-		Debug::Msg("Attaching Hook to mono_jit_init_version...");
-		Hook::Attach(&(LPVOID&)Mono::Exports::mono_jit_init_version, Mono::Hooks::mono_jit_init_version);
-	}
-
-	if (Console::CleanUnityLogs)
-		Console::NullHandles();
+    return Sequence::Run(Sequence) || Assertion::DontDie;
 }
 
-bool Core::CheckPathASCII() 
+bool Core::Initialize()
 {
-	if (std::string(BasePath).find('?') != std::string::npos)
-	{
-		Assertion::ThrowInternalFailure("The base directory path contains non-ASCII characters,\nwhich are not supported by MelonLoader.\nPlease remove them and try again.");
-		return false;
-	}
-	if (std::string(Game::BasePath).find('?') != std::string::npos)
-	{
-		Assertion::ThrowInternalFailure("The game directory path contains non-ASCII characters,\nwhich are not supported by MelonLoader.\nPlease remove them and try again.");
-		return false;
-	}
-	return true;
+    std::vector<Sequence::Element> Sequence = {
+#ifdef __ANDROID__
+            {
+                    "Initializing Android data",
+                    AndroidData::Initialize
+            },
+            {
+                    "Loading Asset Manager",
+                    AssetManagerHelper::Initialize
+            },
+            {
+                    "Loading Static Settings",
+                    StaticSettings::Initialize
+            },
+#endif
+            {
+                "Initializing bHaptics",
+                BHapticsBridge::Initialize,
+            },
+            {
+                    "Loading basic game info",
+                    Game::Initialize
+            },
+#ifdef _WIN32
+            {
+			"Creates instance of patch map",
+			[]() {
+				CommandLine::Read();
+				return true;
+			}
+		},
+#endif
+            {
+                    "Reading Game Info",
+                    Game::ReadInfo
+            },
+#ifndef PORT_DISABLE
+            {
+			"Creates instance of patch map",
+			HashCode::Initialize
+		},
+#endif
+#ifdef __ANDROID__
+            {
+                    "Initializing Capstone",
+                    XrefScannerBindings::Init
+            },
+            {
+                "Initialize Funchook",
+                Hook::FunchookPrepare
+            },
+#endif
+            {
+                    "Initializing Mono",
+                    Mono::Initialize
+            },
+            {
+                    "Show Welcome Message",
+                    []() {
+                        WelcomeMessage();
+                        return true;
+                    }
+            },
+#ifndef PORT_DISABLE
+            {
+                "Creates instance of patch map",
+                AnalyticsBlocker::Initialize
+            },
+#endif
+            {
+                    "Initializing IL2CPP",
+                    Il2Cpp::Initialize
+            },
+            {
+                    "Load Mono",
+                    Mono::Load
+            },
+            {
+                    "Applying patches to Mono",
+                    Mono::ApplyPatches
+            },
+#ifndef PORT_DISABLE
+            {
+                "Creates instance of patch map",
+                AnalyticsBlocker::Hook
+            },
+#endif
+            {
+                    "Applying patches to IL2CPP",
+                    Il2Cpp::ApplyPatches
+            },
+#ifdef __ANDROID__
+            // {
+            // 	"Initializing Bhaptics",
+            // 	bHapticsPlayer::Initialize
+            // },
+#endif
+#ifdef _WIN32
+            {
+			"Applying Null Handles",
+			[]() {
+				if (!Debug::Enabled)
+					Console::NullHandles();
+				return true;
+			}
+		},
+#endif
+    };
+
+
+    return Sequence::Run(Sequence) || Assertion::DontDie;
 }
 
 void Core::WelcomeMessage()
 {
 	if (Debug::Enabled)
 		Logger::WriteSpacer();
-	Logger::QuickLog("------------------------------");
-	Logger::QuickLog(GetVersionStr().c_str());
-	Logger::QuickLog((std::string("OS: ") + GetOSVersion()).c_str());
-	Logger::QuickLog(("Hash Code: " + HashCode::Hash).c_str());
-	Logger::QuickLog("------------------------------");
-	Logger::QuickLog(("Game Type: " + std::string((Game::IsIl2Cpp ? "Il2Cpp" : (Mono::IsOldMono ? "Mono" : "MonoBleedingEdge")))).c_str());
-	Logger::QuickLog(
+	Logger::Msg("------------------------------");
+	Logger::Msg(GetVersionStr().c_str());
+	Logger::Msg((std::string("OS: ") + GetOSVersion()).c_str());
+#ifndef PORT_DISABLE
+	Logger::Msg(("Hash Code: " + HashCode::Hash).c_str());
+#endif
+	Logger::Msg("------------------------------");
+	Logger::Msg(("Name: " + std::string(Game::Name)).c_str());
+	Logger::Msg(("Developer: " + std::string(Game::Developer)).c_str());
+	Logger::Msg(("Unity Version: " + std::string(Game::UnityVersion)).c_str());
+	Logger::Msg(("Game Type: " + std::string((Game::IsIl2Cpp ? "Il2Cpp" : (Mono::IsOldMono ? "Mono" : "MonoBleedingEdge")))).c_str());
+	Logger::Msg(
 #ifdef _WIN64
 		"Game Arch: x64"
-#else
+#elif defined(_WIN32)
 		"Game Arch: x86"
+#elif defined(__ANDROID__)
+            "Game Arch: Arm64"
 #endif
 	);
-	Logger::QuickLog("------------------------------");
+	Logger::Msg("------------------------------");
 	if (Debug::Enabled)
 		Logger::WriteSpacer();
-	Logger::QuickLog(("Core::BasePath = " + std::string(BasePath)).c_str());
-	Logger::QuickLog(("Game::BasePath = " + std::string(Game::BasePath)).c_str());
-	Logger::QuickLog(("Game::DataPath = " + std::string(Game::DataPath)).c_str());
-	Logger::QuickLog(("Game::ApplicationPath = " + std::string(Game::ApplicationPath)).c_str());
+	Debug::Msg(("Game::BasePath = " + std::string(Game::BasePath)).c_str());
+	Debug::Msg(("Game::DataPath = " + std::string(Game::DataPath)).c_str());
+	Debug::Msg(("Game::ApplicationPath = " + std::string(Game::ApplicationPath)).c_str());
 }
 
 bool Core::OSVersionCheck()
 {
+#ifdef _WIN32
 	if (IsRunningInWine() || IsWindows7OrGreater())
 		return true;
+    // FIXME: this should be abstracted for better cross platform
 	int result = MessageBoxA(NULL, "You are running on an Older Operating System.\nWe can not offer support if there are any issues.\nContinue?", "MelonLoader", MB_ICONWARNING | MB_YESNO);
 	if (result == IDYES)
 		return true;
 	return false;
+#elif defined(__ANDROID__)
+    return true;
+#endif
 }
 
 void Core::KillCurrentProcess()
 {
+#ifdef _WIN32
 	HANDLE current_process = GetCurrentProcess();
 	TerminateProcess(current_process, NULL);
 	CloseHandle(current_process);
+#elif defined(__ANDROID__)
+    Logger::Error("Thread Core::KillCurrentProcess() invoked, killing process.");
+    pthread_kill(getpid(), SIGQUIT);
+#endif
 }
 
 const char* Core::GetFileInfoProductName(const char* path)
 {
+#ifdef _WIN32
 	DWORD handle;
 	DWORD size = GetFileVersionInfoSizeA(path, &handle);
 	if (size == NULL)
@@ -169,10 +282,14 @@ const char* Core::GetFileInfoProductName(const char* path)
 	if (!VerQueryValueA(buffer, productverpath.str().c_str(), (LPVOID*)&buffer2, &size2) || (size2 <= 0))
 		return NULL;
 	return (LPCSTR)buffer2;
+#elif defined(__ANDROID__)
+    return nullptr;
+#endif
 }
 
 const char* Core::GetFileInfoProductVersion(const char* path)
 {
+#ifdef _WIN32
 	DWORD handle;
 	DWORD size = GetFileVersionInfoSizeA(path, &handle);
 	if (size == NULL)
@@ -189,28 +306,37 @@ const char* Core::GetFileInfoProductVersion(const char* path)
 	if (!VerQueryValueA(buffer, productverpath.str().c_str(), (LPVOID*)&buffer2, &size2) || (size2 <= 0))
 		return NULL;
 	return (LPCSTR)buffer2;
+#elif defined(__ANDROID__)
+	return nullptr;
+#endif
 }
 
-VERSIONHELPERAPI IsWindows11OrGreater()
-{
-	OSVERSIONINFOEXW osinfo = { sizeof(osinfo), HIBYTE(_WIN32_WINNT_WIN10), LOBYTE(_WIN32_WINNT_WIN10), 22000, 0, { 0 }, 0, 0 };
+bool Core::DirectoryExists(const char* path) { struct stat Stat; return ((stat(path, &Stat) == 0) && (Stat.st_mode & S_IFDIR)); }
+void Core::GetLocalTime(std::chrono::system_clock::time_point* now, std::chrono::milliseconds* ms, std::tm* bt) {
+    *now = std::chrono::system_clock::now();
+    *ms = std::chrono::duration_cast<std::chrono::milliseconds>((*now).time_since_epoch()) % 1000;
+    time_t timer = std::chrono::system_clock::to_time_t(*now);
+#if _WIN32
+    localtime_s(bt, &timer);
+#elif defined(__ANDROID__)
+    localtime_r(&timer, bt);
+#endif
+}
 
-	DWORDLONG const mask = VerSetConditionMask(
-		VerSetConditionMask(
-			VerSetConditionMask(
-				0, VER_MAJORVERSION, VER_GREATER_EQUAL),
-			VER_MINORVERSION, VER_GREATER_EQUAL),
-		VER_BUILDNUMBER, VER_GREATER_EQUAL);
-
-	return VerifyVersionInfoW(&osinfo, VER_MAJORVERSION | VER_MINORVERSION | VER_BUILDNUMBER, mask) != FALSE;
+bool Core::FileExists(const char* path) {
+#ifdef _WIN32
+    WIN32_FIND_DATAA data;
+    return (FindFirstFileA(path, &data) != INVALID_HANDLE_VALUE);
+#elif defined(__ANDROID__)
+    return access( path, F_OK ) == 0;
+#endif
 }
 
 const char* Core::GetOSVersion()
 {
+#ifdef _WIN32
 	if (IsRunningInWine())
 		return (std::string("Wine ") + wine_get_version()).c_str();
-	else if (IsWindows11OrGreater())
-		return "Windows 11";
 	else if (IsWindows10OrGreater())
 		return "Windows 10";
 	else if (IsWindows8Point1OrGreater())
@@ -236,8 +362,25 @@ const char* Core::GetOSVersion()
 	else if (IsWindowsXPOrGreater())
 		return "Windows XP";
 	return "UNKNOWN";
+#elif defined(__ANDROID__)
+	// TODO: pull more info
+	return "Android";
+#endif
 }
 
+JNIEnv *Core::GetEnv() {
+    JNIEnv* env = NULL;
+
+    if (Core::Bootstrap->GetEnv((void**)&env, JNI_VERSION_1_6) != JNI_EDETACHED) {
+        return env;
+    }
+
+    Core::Bootstrap->AttachCurrentThread(&env, 0);
+
+    return env;
+}
+
+#ifdef _WIN32
 void Core::SetupWineCheck()
 {
 	HMODULE ntdll = LoadLibraryA("ntdll.dll");
@@ -248,22 +391,4 @@ void Core::SetupWineCheck()
 		return;
 	wine_get_version = (wine_get_version_t)wine_get_version_proc;
 }
-
-void Core::SetBasePath()
-{
-	LPSTR filepathstr = new CHAR[MAX_PATH];
-	GetModuleFileNameA(Bootstrap, filepathstr, MAX_PATH);
-	std::string filepathstr2 = filepathstr;
-	delete[] filepathstr;
-	filepathstr2 = filepathstr2.substr(0, filepathstr2.find_last_of("\\/"));
-	filepathstr2 = filepathstr2.substr(0, filepathstr2.find_last_of("\\/"));
-	filepathstr2 = filepathstr2.substr(0, filepathstr2.find_last_of("\\/"));
-	BasePath = new char[filepathstr2.size() + 1];
-	std::copy(filepathstr2.begin(), filepathstr2.end(), BasePath);
-	BasePath[filepathstr2.size()] = '\0';
-	BasePathMono = Encoding::OsToUtf8(BasePath);
-}
-
-bool Core::DirectoryExists(const char* path) { struct stat Stat; return ((stat(path, &Stat) == 0) && (Stat.st_mode & S_IFDIR)); }
-bool Core::FileExists(const char* path) { WIN32_FIND_DATAA data; return (FindFirstFileA(path, &data) != INVALID_HANDLE_VALUE); }
-void Core::GetLocalTime(std::chrono::system_clock::time_point* now, std::chrono::milliseconds* ms, std::tm* bt) { *now = std::chrono::system_clock::now(); *ms = std::chrono::duration_cast<std::chrono::milliseconds>((*now).time_since_epoch()) % 1000; time_t timer = std::chrono::system_clock::to_time_t(*now); localtime_s(bt, &timer); }
+#endif

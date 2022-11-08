@@ -1,26 +1,21 @@
 #pragma once
 #include "Mono.h"
-#include "../Utils/Console.h"
+#include "StaticSettings.h"
+#include "../Utils/Console/Console.h"
 
 class InternalCalls
 {
 public:
+	static bool Initialized;
 	static void Initialize();
-
-	class MelonDebug
-	{
-	public:
-		static void AddInternalCalls();
-		static bool IsEnabled();
-	};
 
 	class MelonLogger
 	{
 	public:
 		static void AddInternalCalls();
-		static void Internal_PrintModName(Console::Color meloncolor, Console::Color authorcolor, Mono::String* name, Mono::String* author, Mono::String* version, Mono::String* id);
+		static void Internal_PrintModName(Console::Color meloncolor, Mono::String* name, Mono::String* version);
 		static void Internal_Msg(Console::Color meloncolor, Console::Color txtcolor, Mono::String* namesection, Mono::String* txt);
-	    static void Internal_Warning(Mono::String* namesection, Mono::String* txt);
+		static void Internal_Warning(Mono::String* namesection, Mono::String* txt);
 		static void Internal_Error(Mono::String* namesection, Mono::String* txt);
 		static void ThrowInternalFailure(Mono::String* msg);
 		static void WriteSpacer();
@@ -35,35 +30,49 @@ public:
 		static bool IsGameIl2Cpp();
 		static bool IsOldMono();
 		static Mono::String* GetApplicationPath();
-		static Mono::String* GetBaseDirectory();
+		static Mono::String* GetGamePackage();
+		static Mono::String* GetGameName();
+		static Mono::String* GetGameDeveloper();
 		static Mono::String* GetGameDirectory();
 		static Mono::String* GetGameDataDirectory();
+		static Mono::String* GetMainAssemblyLoc();
+		static Mono::String* GetUnityVersion();
 		static Mono::String* GetManagedDirectory();
 		static Mono::String* GetHashCode();
 		static void SCT(Mono::String* title);
 		static Mono::String* GetFileProductName(Mono::String* filepath);
-		static void* GetLibPtr();
-		static void* GetRootDomainPtr();
-		static Mono::ReflectionAssembly* CastManagedAssemblyPtr(void* ptr);
+		static void GetStaticSettings(StaticSettings::Settings_t &settings);
 	};
 
-	class UnityInformationHandler
+	class MelonDebug
 	{
 	public:
 		static void AddInternalCalls();
-		static void SetDefaultConsoleTitleWithGameName(Mono::String* GameName, Mono::String* GameVersion);
-	};
+		static void Internal_Msg(Console::Color meloncolor, Console::Color txtcolor, Mono::String* namesection, Mono::String* txt);
+	}; 
 
-	class IIl2CppAssemblyGenerator
+	class SupportModules
 	{
 	public:
 		static void AddInternalCalls();
+		static void SetDefaultConsoleTitleWithGameName(Mono::String* GameVersion);
+	};
 
-		class ExecutablePackageBase
-		{
-		public:
-			static void AddInternalCalls();
-			static void SetProcessId(int id);
-		};
+	class UnhollowerIl2Cpp
+	{
+	public:
+		static void AddInternalCalls();
+	private:
+		static void* GetProcAddress(void* hModule, Mono::String* procName);
+		static void* LoadLibrary(Mono::String* lpFileName);
+		static void* GetAsmLoc();
+		static void CleanupDisasm();
+	};
+
+	class BHaptics
+	{
+	public:
+		static void AddInternalCalls();
 	};
 };
+

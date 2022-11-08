@@ -1,0 +1,6 @@
+[submodule "Bootstrap/external/capstone"]
+	path = Bootstrap/external/capstone
+	url = https://github.com/capstone-engine/capstone.git
+[submodule "Bootstrap/external/funchook"]
+	path = Bootstrap/external/funchook
+	url = https://github.com/kubo/funchook.git
