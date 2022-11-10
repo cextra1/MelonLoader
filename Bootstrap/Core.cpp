@@ -42,8 +42,8 @@ JNIEnv* Core::Env = NULL;
 char* Core::Path = NULL;
 
 // FIXME: this should be moved to preprocessor define
-std::string Core::Version = "0.4.1";
-std::string Core::ReleaseType = "Android Development Build";
+std::string Core::Version = "0.5.5";
+std::string Core::ReleaseType = "Android";
 //std::string Core::ReleaseType = "Open-Beta";
 
 std::string Core::GetVersionStr()
