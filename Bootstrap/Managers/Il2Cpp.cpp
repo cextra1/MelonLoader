@@ -16,6 +16,8 @@
 #ifdef __ANDROID__
 #include <dlfcn.h>
 #include <android/log.h>
+#include <thread>
+
 #endif
 #include "../Utils/Helpers/ImportLibHelper.h"
 
@@ -116,7 +118,7 @@ bool Il2Cpp::Initialize()
 	if (Handle == nullptr)
 	{
 		// TODO: ASSERT ERROR
-		Logger::Error(dlerror());
+		Logger::QuickLog(dlerror(), LogType::Error);
 		return false;
 	}
 
@@ -153,7 +155,7 @@ bool Il2Cpp::Exports::Initialize()
 
 	if (!Assertion::ShouldContinue)
 	{
-		Logger::Error("One or more symbols failed to load.");
+		Logger::QuickLog("One or more symbols failed to load.", LogType::Error);
 	}
 
 	return Assertion::ShouldContinue;
@@ -218,7 +220,7 @@ Il2Cpp::Domain* Il2Cpp::Hooks::il2cpp_init(const char* name)
 
     if (!Mono::CheckPaths())
 	{
-		Logger::Error("Skipping initialization of MelonLoader");
+		Logger::QuickLog("Skipping initialization of MelonLoader", LogType::Error);
 		return NULL;
 	}
 

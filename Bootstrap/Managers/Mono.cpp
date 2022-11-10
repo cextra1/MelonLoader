@@ -499,7 +499,7 @@ bool Mono::CheckPaths()
 	{
 		if (!Core::DirectoryExists(path))
 		{
-			Logger::Errorf("Failed to load path (%s) because it doesn't exist.  Please restart the game after it loads.", path);
+			Logger::QuickLogf("Failed to load path (%s) because it doesn't exist.  Please restart the game after it loads.", LogType::Error, path);
 			return false;
 		}
 	}
@@ -514,7 +514,7 @@ bool Mono::InitMonoJNI()
 
 	if (env == NULL)
 	{
-		Logger::Error("Failed to attach ENV");
+		Logger::QuickLog("Failed to attach ENV", LogType::Error);
 		return false;
 	}
 
@@ -528,7 +528,7 @@ bool Mono::InitMonoJNI()
 	jmethodID jLoadApplication = env->GetStaticMethodID(jMonoDroidHelper, "LoadApplication", "()V");
 	if (jLoadApplication == NULL)
 	{
-		Logger::Error("Failed to find Method LoadApplication()V");
+		Logger::QuickLog("Failed to find Method LoadApplication()V", LogType::Error);
 		return false;
 	}
 	
@@ -587,28 +587,8 @@ void Mono::Hooks::mono_printerr(const char* string, mono_bool is_stdout)
 void Mono::Hooks::mono_log(const char* log_domain, const char* log_level, const char* message, mono_bool fatal, void* user_data)
 {
 	Console::Color color = fatal ? Console::Gray : Console::Red;
-	const Logger::MessagePrefix prefixes[]{
-#ifndef __ANDROID__
-		Logger::MessagePrefix{
-			color,
-			Logger::GetTimestamp().c_str()
-		},
-#endif
-		Logger::MessagePrefix{
-			color,
-			"Mono"
-		},
-		Logger::MessagePrefix{
-			color,
-			log_level
-		},
-		Logger::MessagePrefix{
-			color,
-			log_domain
-		},
-	};
-
-	Logger::Internal_DirectWrite(Console::Color::Gray, fatal ? LogLevel::Error : LogLevel::Info, prefixes, sizeof(prefixes) / sizeof(prefixes[0]), message);
+	//Logger::Internal_DirectWrite(Console::Color::Gray, fatal ? LogLevel::Error : LogLevel::Info, prefixes, sizeof(prefixes) / sizeof(prefixes[0]), message);
+    Logger::Internal_Msg(color, color, "Mono", message);
 }
 
 void Mono::Hooks::mono_unhandled_exception(Object* exceptionObject, void* user_data)

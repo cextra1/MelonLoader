@@ -17,6 +17,7 @@
 #include <dlfcn.h>
 
 #include "BaseAssembly.h"
+#include "../Utils/Encoding.h"
 
 bool InternalCalls::Initialized = false;
 
@@ -43,13 +44,40 @@ void InternalCalls::MelonLogger::Internal_Msg(Console::Color meloncolor, Console
     Mono::Free(txtStr);
 }
 
-void InternalCalls::MelonLogger::Internal_PrintModName(Console::Color meloncolor, Mono::String* name, Mono::String* version)
+void InternalCalls::MelonLogger::Internal_PrintModName(Console::Color meloncolor, Console::Color authorcolor, Mono::String* name, Mono::String* author, Mono::String* version, Mono::String* id)
 {
     auto nameStr = Mono::Exports::mono_string_to_utf8(name);
-    auto versionStr = Mono::Exports::mono_string_to_utf8(version);
-    Logger::Internal_PrintModName(meloncolor, nameStr, versionStr);
+    auto nameStrOs = Encoding::Utf8ToOs(nameStr);
     Mono::Free(nameStr);
+
+    auto versionStr = Mono::Exports::mono_string_to_utf8(version);
+    auto versionStrOs = Encoding::Utf8ToOs(versionStr);
     Mono::Free(versionStr);
+
+    char* idStrOs = NULL;
+    if (id != NULL)
+    {
+        auto idStr = Mono::Exports::mono_string_to_utf8(id);
+        idStrOs = Encoding::Utf8ToOs(idStr);
+        Mono::Free(idStr);
+    }
+
+    char* authorStrOs = NULL;
+    if (author != NULL)
+    {
+        auto authorStr = Mono::Exports::mono_string_to_utf8(author);
+        authorStrOs = Encoding::Utf8ToOs(authorStr);
+        Mono::Free(authorStr);
+    }
+
+    Logger::Internal_PrintModName(meloncolor, authorcolor, nameStrOs, authorStrOs, versionStrOs, idStrOs);
+
+    delete[] nameStrOs;
+    delete[] versionStrOs;
+    if (idStrOs != NULL)
+        delete[] idStrOs;
+    if (authorStrOs != NULL)
+        delete[] authorStrOs;
 }
 
 void InternalCalls::MelonLogger::Internal_Warning(Mono::String* namesection, Mono::String* txt)

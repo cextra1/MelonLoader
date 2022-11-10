@@ -8,14 +8,6 @@ import com.melonloader.Bootstrap;
 import com.melonloader.LogBridge;
 
 public class InjectionHelper {
-    static {
-        try {
-            InjectBootstrap();
-        } catch (Exception e) {
-            LogBridge.error(e.getMessage());
-        }
-    }
-
     public static void InjectBootstrap() throws Exception {
         LogBridge.msg("Bootstrapping...");
 
@@ -39,6 +31,13 @@ public class InjectionHelper {
         AssemblyHelper.InstallAssemblies();
         // AssetsTools can't read the data, unsure why
         //UnityInformationHelper.SaveGlobalGameManagersToFile();
+
+        // TODO: is this where it should be happening?
+        try {
+            InjectBootstrap();
+        } catch (Exception e) {
+            LogBridge.error(e.getMessage());
+        }
 
         Bootstrap.Initialize();
     }

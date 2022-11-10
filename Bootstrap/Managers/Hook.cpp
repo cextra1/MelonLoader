@@ -54,7 +54,7 @@ void Hook::Attach(void** target, void* detour)
         rv = funchook_prepare(handle->handle, target, detour);
         if (rv != 0)
         {
-            Logger::Error("Failed to prepare hook");
+            Logger::QuickLog("Failed to prepare hook", LogType::Error);
             return;
         }
     } else
@@ -63,7 +63,7 @@ void Hook::Attach(void** target, void* detour)
     rv = funchook_install(handle->handle, 0);
     if (rv != 0)
     {
-        Logger::Errorf("Failed to install hook (%d, %s)", rv, funchook_error_message(handle->handle));
+        Logger::QuickLogf("Failed to install hook (%d, %s)", LogType::Error, rv, funchook_error_message(handle->handle));
         return;
     }
 
@@ -81,7 +81,7 @@ void Hook::Detach(void** target, void* detour)
 
     if (HookMap.find(trueTarget) == HookMap.end())
     {
-        Logger::Error("Hook doesn't exist");
+        Logger::QuickLog("Hook doesn't exist", LogType::Error);
         return;
     } else
         handle = HookMap[trueTarget];
@@ -91,7 +91,7 @@ void Hook::Detach(void** target, void* detour)
     rv = funchook_uninstall(handle->handle, 0);
     if (rv != 0)
     {
-        Logger::Error("Failed to uninstall hook");
+        Logger::QuickLog("Failed to uninstall hook", LogType::Error);
         return;
     }
 

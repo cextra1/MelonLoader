@@ -33,7 +33,7 @@ void funchook_log(const char* fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
-	Logger::vMsgf(Console::Color::DarkCyan, fmt, ap);
+	Logger::QuickLogf(/*Console::Color::DarkCyan, */fmt, LogType::Msg, ap);
 	va_end(ap);
 }
 
@@ -93,7 +93,7 @@ bool XrefScannerBindings::Init()
 {
 	if (cs_open(CS_ARCH_ARM64, CS_MODE_LITTLE_ENDIAN, &cs) != CS_ERR_OK)
 	{
-		Logger::Error("Failed to load capstone");
+		Logger::QuickLog("Failed to load capstone", LogType::Error);
 		return false;
 	}
 

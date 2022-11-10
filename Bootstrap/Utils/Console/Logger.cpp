@@ -1,6 +1,8 @@
 #include "Logger.h"
 #include "../Assertion.h"
 #include "Debug.h"
+#include "../../Managers/Game.h"
+#include "../../Core.h"
 #include <stdio.h>
 
 #ifdef _WIN32
@@ -14,10 +16,8 @@
 #include <list>
 #include <iostream>
 #include <shared_mutex>
-
-std::mutex Logger::mutex_;
-std::thread Logger::logThread;
-std::list<Logger::LogArgs> Logger::logQueue;
+#include <filesystem>
+namespace fs = std::filesystem;
 
 const char* Logger::FilePrefix = "MelonLoader_";
 const char* Logger::FileExtension = ".log";
@@ -27,10 +27,8 @@ int Logger::MaxWarnings = 100;
 int Logger::MaxErrors = 100;
 int Logger::WarningCount = 0;
 int Logger::ErrorCount = 0;
-
-#ifndef PORT_DISABLE
+std::mutex Logger::logMutex;
 Logger::FileStream Logger::LogFile;
-#endif
 
 bool Logger::Initialize()
 {
@@ -41,8 +39,13 @@ bool Logger::Initialize()
 		MaxErrors = 0;
 	}
 
-#ifndef PORT_DISABLE
-	std::string logFolderPath = std::string(Game::BasePath) + "\\MelonLoader\\Logs";
+#ifdef __ANDROID__
+    std::string timeStamp = GetTimestamp("%y-%m-%d_%OH-%OM-%OS");
+    std::string baseFilePath = JavaInitialize();
+    LogFile.coss = std::ofstream(baseFilePath + "/logs/" + FilePrefix + timeStamp + FileExtension);
+    LogFile.latest = std::ofstream(baseFilePath + "/" + LatestLogFileName + FileExtension);
+#else
+    std::string logFolderPath = std::string(Core::BasePath) + "\\MelonLoader\\Logs";
 	if (Core::DirectoryExists(logFolderPath.c_str()))
 		CleanOldLogs(logFolderPath.c_str());
 	else if (_mkdir(logFolderPath.c_str()) != 0)
@@ -55,414 +58,204 @@ bool Logger::Initialize()
 	std::tm bt;
 	Core::GetLocalTime(&now, &ms, &bt);
 	std::stringstream filepath;
-	filepath << logFolderPath << "\\" << FilePrefix << std::put_time(&bt, "%y-%m-%d_%OH-%OM-%OS") << "." << std::setfill('0') << std::setw(3) << ms.count() << FileExtension;
+	filepath << logFolderPath << "\\" << FilePrefix << std::put_time(&bt, "%y-%m-%d_%H-%M-%S") << "." << std::setfill('0') << std::setw(3) << ms.count() << FileExtension;
 	LogFile.coss = std::ofstream(filepath.str());
-	std::string latest_path = (std::string(Game::BasePath) + "\\MelonLoader\\" + LatestLogFileName + FileExtension);
+	std::string latest_path = (std::string(Core::BasePath) + "\\MelonLoader\\" + LatestLogFileName + FileExtension);
 	if (Core::FileExists(latest_path.c_str()))
 		std::remove(latest_path.c_str());
 	LogFile.latest = std::ofstream(latest_path.c_str());
 #endif
 
-	logThread = std::thread(&LogThreadHandle);
-
 	return true;
 }
 
-#ifndef PORT_DISABLE
-#endif
-
-std::string Logger::GetTimestamp()
+std::string Logger::JavaInitialize()
 {
-#ifndef PORT_DISABLE
-	std::chrono::system_clock::time_point now;
-	std::chrono::milliseconds ms;
-	std::tm bt;
-	Core::GetLocalTime(&now, &ms, &bt);
-	std::stringstream timestamp;
+    auto env = Core::GetEnv();
 
-	timestamp << "placeholder time";
-	
-	return timestamp.str();
+    jclass jCore = env->FindClass("com/melonloader/helpers/nativehelpers/Logger");
+    if (jCore == NULL)
+    {
+        Assertion::ThrowInternalFailure("Failed to find class com.melonloader.helpers.nativehelpers.Logger");
+        return "";
+    }
+
+    jmethodID mid = env->GetStaticMethodID(jCore, "Initialize", "()Ljava/lang/String;");
+    if (mid == NULL)
+    {
+        Assertion::ThrowInternalFailure("Failed to find method com.melonloader.helpers.nativehelpers.Logger.Initialize()");
+        return "";
+    }
+
+    jobject jObj = env->CallStaticObjectMethod(jCore, mid);
+    if (jObj == NULL)
+    {
+        Assertion::ThrowInternalFailure("Failed to invoke com.melonloader.helpers.nativehelpers.Logger.Initialize()");
+        return "";
+    }
+
+    std::string filePath = jstring2string(env, (jstring)jObj);
+    std::string log = "[Bootstrap] Current log path at: " + filePath;
+    Logger::QuickLog(log.c_str());
+    return filePath;
+}
+
+std::string Logger::jstring2string(JNIEnv *env, jstring jStr) {
+    if (!jStr)
+        return "";
+
+    const jclass stringClass = env->GetObjectClass(jStr);
+    const jmethodID getBytes = env->GetMethodID(stringClass, "getBytes", "(Ljava/lang/String;)[B");
+    const jbyteArray stringJbytes = (jbyteArray) env->CallObjectMethod(jStr, getBytes, env->NewStringUTF("UTF-8"));
+
+    size_t length = (size_t) env->GetArrayLength(stringJbytes);
+    jbyte* pBytes = env->GetByteArrayElements(stringJbytes, NULL);
+
+    std::string ret = std::string((char *)pBytes, length);
+    env->ReleaseByteArrayElements(stringJbytes, pBytes, JNI_ABORT);
+
+    env->DeleteLocalRef(stringJbytes);
+    env->DeleteLocalRef(stringClass);
+    return ret;
+}
+
+std::string Logger::GetTimestamp(std::string format)
+{
+    std::chrono::system_clock::time_point now;
+    std::chrono::milliseconds ms;
+    std::tm bt;
+    Core::GetLocalTime(&now, &ms, &bt);
+    std::stringstream timeStamp;
+    timeStamp << std::put_time(&bt, format.c_str()) << "." << std::setfill('0') << std::setw(3) << ms.count();
+    return timeStamp.str();
+}
+
+void Logger::LogToConsoleAndFile(Log log)
+{
+    std::lock_guard guard(logMutex);
+#if __ANDROID__
+    log.BuildConsoleString();
 #else
-	return "PLACEHOLDER TIME";
+    log.BuildConsoleString(std::cout);
+#endif
+    LogFile << log.BuildLogString();
+    WriteSpacer();
+}
+
+void Logger::CleanOldLogs(const char* path)
+{
+    // TODO: should probably implement this for android,
+    // don't feel like dealing with file system stuff though
+#ifndef __ANDROID__
+    if (MaxLogs <= 0)
+        return;
+    std::list<std::filesystem::directory_entry>entry_list;
+    for (std::filesystem::directory_entry entry : std::filesystem::directory_iterator(path))
+    {
+        if (!entry.is_regular_file())
+            continue;
+        std::string entry_file = entry.path().filename().generic_string();
+        if ((entry_file.rfind(FilePrefix, NULL) == NULL) && (entry_file.rfind(FileExtension) == (entry_file.size() - std::string(FileExtension).size())))
+            entry_list.push_back(entry);
+    }
+    if (entry_list.size() < MaxLogs)
+        return;
+    entry_list.sort(Logger::CompareWritetime);
+    for (std::list<std::filesystem::directory_entry>::iterator it = std::next(entry_list.begin(), (MaxLogs - 1)); it != entry_list.end(); ++it)
+        remove((*it).path().u8string().c_str());
 #endif
 }
 
 void Logger::WriteSpacer()
 {
-
-#ifdef __ANDROID__
-	// todo: write to logfile
-	__android_log_print(ANDROID_LOG_INFO, "MelonLoader", "");
-#elif _WIN32
-	static const std::string lineEnd = "\n";
-	std::shared_lock<std::mutex> lock(mutex_);
-	logQueue.emplace_back(lineEnd, lineEnd);
-#endif
+    LogFile << std::endl;
+    std::cout << std::endl;
 }
 
-void Logger::Msg(Console::Color txtcolor, const char* txt)
+void Logger::Internal_PrintModName(Console::Color meloncolor, Console::Color authorcolor, const char* name, const char* author, const char* version, const char* id)
 {
-	Msgf(txtcolor, "%s", txt);
-}
+    // Not using log object for this as we're modifying conventional coloring
+    std::string timestamp = GetTimestamp();
+    LogFile << "[" << timestamp << "] " << name << " v" << version;
 
-void Logger::Warning(const char* txt)
-{
-	Warningf("%s", txt);
-}
+    std::cout
+            << Console::ColorToAnsi(Console::Color::Gray)
+            << "["
+            << Console::ColorToAnsi(Console::Color::Green)
+            << timestamp
+            << Console::ColorToAnsi(Console::Color::Gray)
+            << "] "
+            << Console::ColorToAnsi(meloncolor)
+            << name
+            << Console::ColorToAnsi(Console::Color::Gray)
+            << " v"
+            << version;
 
-void Logger::Error(const char* txt)
-{
-	Errorf("%s", txt);
-}
+    if (id != NULL)
+    {
+        LogFile << " (" << id << ")";
 
-void Logger::Msgf(Console::Color txtcolor, const char* fmt, ...)
-{
-	va_list args;
-	va_start(args, fmt);
-	Logger::vMsgf(txtcolor, fmt, args);
-	va_end(args);
-}
+        std::cout
+                << " ("
+                << Console::ColorToAnsi(meloncolor)
+                << id
+                << Console::ColorToAnsi(Console::Color::Gray)
+                << ")";
+    }
 
-void Logger::Warningf(const char* fmt, ...)
-{
-	va_list args;
-	va_start(args, fmt);
-	Logger::vWarningf(fmt, args);
-	va_end(args);
-}
+    LogFile << std::endl;
+    std::cout
+            << std::endl
+            << Console::ColorToAnsi(Console::Color::Gray, false);
 
-void Logger::Errorf(const char* fmt, ...)
-{
-	va_list args;
-	va_start(args, fmt);
-	Logger::vErrorf(fmt, args);
-	va_end(args);
-}
+    if (author != NULL)
+    {
+        timestamp = GetTimestamp();
+        LogFile << "[" << timestamp << "] by " << author << std::endl;
 
-void Logger::vMsgf(Console::Color txtcolor, const char* fmt, va_list args)
-{
-#ifdef __ANDROID__
-	Internal_vDirectWritef(txtcolor, LogLevel::Warning, NULL, 0, fmt, args);
-#else
-	const Logger::MessagePrefix prefixes[]{
-		Logger::MessagePrefix{
-			Console::Green,
-			GetTimestamp()
-		}
-	};
-
-	Internal_vDirectWritef(txtcolor, LogLevel::Warning, prefixes, sizeof(prefixes) / sizeof(prefixes[0]), fmt, args);
-#endif
-}
-
-void Logger::vWarningf(const char* fmt, va_list args)
-{
-	if (MaxWarnings > 0)
-	{
-		if (WarningCount >= MaxWarnings)
-			return;
-		WarningCount++;
-	}
-
-	const Logger::MessagePrefix prefixes[]{
-#ifndef __ANDROID__
-		Logger::MessagePrefix{
-			Console::Yellow,
-			GetTimestamp().c_str()
-		},
-#endif
-		Logger::MessagePrefix{
-			Console::Yellow,
-			"WARNING"
-		}
-	};
-
-	Internal_vDirectWritef(Console::Color::Yellow, LogLevel::Warning, prefixes, sizeof(prefixes) / sizeof(prefixes[0]), fmt, args);
-}
-
-void Logger::vErrorf(const char* fmt, va_list args)
-{
-	if (MaxErrors > 0)
-	{
-		if (ErrorCount >= MaxErrors)
-			return;
-		ErrorCount++;
-	}
-
-	const Logger::MessagePrefix prefixes[]{
-#ifndef __ANDROID__
-		Logger::MessagePrefix{
-			Console::Red,
-			GetTimestamp().c_str()
-		},
-#endif
-		Logger::MessagePrefix{
-			Console::Red,
-			"ERROR"
-		}
-	};
-
-	Internal_vDirectWritef(Console::Color::Red, LogLevel::Warning, prefixes, sizeof(prefixes) / sizeof(prefixes[0]), fmt, args);
-}
-
-void Logger::Internal_PrintModName(Console::Color color, const char* name, const char* version)
-{
-#ifndef __ANDROID__
-	const Logger::MessagePrefix prefixes[]{
-		Logger::MessagePrefix{
-			Console::Green,
-			GetTimestamp().c_str()
-		}
-	};
-#endif
-
-	std::stringstream versionStr;
-	versionStr << Console::ColorToAnsi(color)
-		<< name
-		<< Console::ColorToAnsi(Console::Color::Gray)
-		<< " v"
-		<< Console::ColorToAnsi(Console::Color::Gray)
-		<< version;
-#ifdef __ANDROID__
-	Internal_DirectWrite(color, LogLevel::Warning, NULL, 0, versionStr.str().c_str());
-#else
-	Internal_DirectWrite(color, LogLevel::Warning, prefixes, sizeof(prefixes) / sizeof(prefixes[0]), versionStr.str().c_str());
-#endif
+        std::cout
+                << Console::ColorToAnsi(Console::Color::Gray)
+                << "["
+                << Console::ColorToAnsi(Console::Color::Green)
+                << timestamp
+                << Console::ColorToAnsi(Console::Color::Gray)
+                << "] by "
+                << Console::ColorToAnsi(authorcolor)
+                << author
+                << std::endl
+                << Console::ColorToAnsi(Console::Color::Gray, false);
+    }
 }
 
 void Logger::Internal_Msg(Console::Color meloncolor, Console::Color txtcolor, const char* namesection, const char* txt)
 {
-	Internal_Msgf(meloncolor, txtcolor, namesection, "%s", txt);
+    LogToConsoleAndFile(Log(Msg, meloncolor, txtcolor, namesection, txt));
 }
 
 void Logger::Internal_Warning(const char* namesection, const char* txt)
 {
-	Internal_Warningf(namesection, "%s", txt);
+    if (MaxWarnings > 0)
+    {
+        if (WarningCount >= MaxWarnings)
+            return;
+        WarningCount++;
+    }
+    else if (MaxWarnings < 0)
+        return;
+
+    LogToConsoleAndFile(Log(Warning, namesection, txt));
 }
 
 void Logger::Internal_Error(const char* namesection, const char* txt)
 {
-	Internal_Errorf(namesection, "%s", txt);
-}
+    if (MaxErrors > 0)
+    {
+        if (ErrorCount >= MaxErrors)
+            return;
+        ErrorCount++;
+    }
+    else if (MaxErrors < 0)
+        return;
 
-void Logger::Internal_Msgf(Console::Color meloncolor, Console::Color txtcolor, const char* namesection, const char* fmt, ...)
-{
-	va_list args;
-	va_start(args, fmt);
-	Logger::Internal_vMsgf(meloncolor, txtcolor, namesection, fmt, args);
-	va_end(args);
-}
-
-void Logger::Internal_Warningf(const char* namesection, const char* fmt, ...)
-{
-	va_list args;
-	va_start(args, fmt);
-	Logger::Internal_vWarningf(namesection, fmt, args);
-	va_end(args);
-}
-
-void Logger::Internal_Errorf(const char* namesection, const char* fmt, ...)
-{
-	va_list args;
-	va_start(args, fmt);
-	Logger::Internal_vErrorf(namesection, fmt, args);
-	va_end(args);
-}
-
-void Logger::Internal_vMsgf(Console::Color meloncolor, Console::Color txtcolor, const char* namesection, const char* fmt, va_list args)
-{
-	if (namesection == NULL)
-	{
-		vMsgf(txtcolor, fmt, args);
-		return;
-	}
-
-	const Logger::MessagePrefix prefixes[]{
-#ifndef __ANDROID__
-		Logger::MessagePrefix{
-			Console::Green,
-			GetTimestamp().c_str()
-		},
-#endif
-		Logger::MessagePrefix{
-			meloncolor,
-			namesection
-		}
-	};
-
-	Internal_vDirectWritef(txtcolor, LogLevel::Warning, prefixes, sizeof(prefixes) / sizeof(prefixes[0]), fmt, args);
-}
-
-void Logger::Internal_vWarningf(const char* namesection, const char* fmt, va_list args)
-{
-	if (namesection == NULL)
-	{
-		vWarningf(fmt, args);
-		return;
-	}
-
-	if (MaxWarnings > 0)
-	{
-		if (WarningCount >= MaxWarnings)
-			return;
-		WarningCount++;
-	}
-
-	const Logger::MessagePrefix prefixes[]{
-#ifndef __ANDROID__
-		Logger::MessagePrefix{
-			Console::Yellow,
-			GetTimestamp().c_str()
-		},
-#endif
-		Logger::MessagePrefix{
-			Console::Yellow,
-			namesection
-		},
-		Logger::MessagePrefix{
-			Console::Yellow,
-			"WARNING"
-		},
-	};
-
-	Internal_vDirectWritef(Console::Color::Yellow, LogLevel::Warning, prefixes, sizeof(prefixes) / sizeof(prefixes[0]), fmt, args);
-}
-
-void Logger::Internal_vErrorf(const char* namesection, const char* fmt, va_list args)
-{
-	if (namesection == NULL)
-	{
-		vErrorf(fmt, args);
-		return;
-	}
-
-	if (MaxErrors > 0)
-	{
-		if (ErrorCount >= MaxErrors)
-			return;
-		ErrorCount++;
-	}
-
-	const Logger::MessagePrefix prefixes[]{
-#ifndef __ANDROID__
-		Logger::MessagePrefix{
-			Console::Red,
-			GetTimestamp().c_str()
-		},
-#endif
-		Logger::MessagePrefix{
-			Console::Red,
-			namesection
-		},
-		Logger::MessagePrefix{
-			Console::Red,
-			"ERROR"
-		},
-	};
-
-	Internal_vDirectWritef(Console::Color::Red, LogLevel::Error, prefixes, sizeof(prefixes) / sizeof(prefixes[0]), fmt, args);
-}
-
-void Logger::Internal_DirectWrite(Console::Color txtcolor, LogLevel level, const MessagePrefix prefixes[], const int size, const char* txt)
-{
-	Logger::Internal_DirectWritef(txtcolor, level, prefixes, size, "%s", txt);
-}
-
-void Logger::Internal_DirectWritef(Console::Color txtcolor, LogLevel level, const MessagePrefix prefixes[], const int size, const char* fmt, ...)
-{
-	va_list args;
-	va_start(args, fmt);
-	Logger::Internal_vDirectWritef(txtcolor, level, prefixes, size, fmt, args);
-	va_end(args);
-}
-
-void Logger::Internal_vDirectWritef(Console::Color txtcolor, LogLevel level, const MessagePrefix prefixes[], const int size, const char* fmt, va_list args)
-{
-	// queue up log
-	std::lock_guard lock(mutex_);
-
-//    va_list heap_args;
-//    va_copy(heap_args, args);
-//	logQueue.emplace_back(txtcolor, level, prefixes, size, fmt, args);
-    __android_log_vprint(ANDROID_LOG_INFO, "MelonLoader", fmt, args);
-
-}
-
-void Logger::LogThreadHandle()
-{
-	// Sorry SirCoolness, as much as I love goto,
-	// I need that vector to get destroyed
-	while (true)
-	{
-		// Nesting is ugly, so skipping nesting
-		if (logQueue.empty())
-			continue;
-
-		// Copy the list to avoid keeping control
-		std::unique_lock lock(mutex_);
-		auto copy_list(logQueue);
-
-		logQueue.clear();
-		lock.unlock();
-		
-		// Go through queue, and log each element
-		for (auto& pair : copy_list)
-			LogWrite(pair);
-	}
-}
-
-void Logger::LogWrite(Logger::LogArgs& args)
-{
-	// why do we need to create a new stream every time.
-	std::stringstream msgColor;
-	std::stringstream msgPlain;
-
-	for (int i = 0; i < args.prefixes_len; i++)
-	{
-		msgColor << Console::ColorToAnsi(Console::Color::Gray)
-			<< "["
-			<< Console::ColorToAnsi(args.prefixes[i].Color)
-			<< args.prefixes[i].Message
-			<< Console::ColorToAnsi(Console::Color::Gray)
-			<< "]"
-			<< Console::ColorToAnsi(Console::Color::Reset)
-			<< " ";
-
-		msgPlain << "["
-			<< args.prefixes[i].Message
-			<< "] ";
-	}
-
-#ifdef __ANDROID__
-	msgColor
-		<< Console::ColorToAnsi(args.txtcolor)
-		<< args.buffer
-		<< Console::ColorToAnsi(Console::Color::Reset);
-
-	msgPlain
-		<< args.buffer
-		<< Console::ColorToAnsi(Console::Color::Reset);
-#else
-	msgColor
-		<< Console::ColorToAnsi(args.txtcolor)
-		<< args.buffer
-		<< std::endl
-		<< Console::ColorToAnsi(Console::Color::Reset);
-	msgPlain
-		<< args.buffer
-		<< std::endl
-		<< Console::ColorToAnsi(Console::Color::Reset);
-#endif
-
-
-#ifdef __ANDROID__
-	// todo: write to logfile
-	const char* messageC = msgColor.str().c_str();
-	__android_log_print(ANDROID_LOG_INFO, "MelonLoader", "%s", messageC);
-#elif defined(_WIN32)
-	//TODO: implement printf
-	LogFile << msgPlain.str().c_str();
-	std::cout << msgColor.str().c_str();
-#endif
+    LogToConsoleAndFile(Log(Error, namesection, txt));
 }

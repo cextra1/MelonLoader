@@ -1,133 +1,95 @@
 #pragma once
-#ifdef _WIN32
-#include <Windows.h>
-#include <filesystem>
 #include <fstream>
-#endif
-#include <string>
-#include <list>
+#include <filesystem>
+#include <iostream>
 #include <mutex>
-#include <shared_mutex>
-#include <thread>
-#include <vector>
+#include <string>
+#include <jni.h>
+#include "./Console.h"
+#include "Log.h"
 
-#include "Console.h"
-
-enum LogLevel
-{
-	Verbose = 0,
-	Info,
-	Warning,
-	Error
-};
 
 class Logger
 {
+    static std::mutex logMutex;
+
 public:
-	static int MaxLogs;
-	static int MaxWarnings;
-	static int MaxErrors;
+    static int MaxLogs;
+    static int MaxWarnings;
+    static int MaxErrors;
 
-	static bool Initialize();
-	static std::string GetTimestamp();
-	static void WriteSpacer();
+    static int WarningCount;
+    static int ErrorCount;
 
-	static void Msg(const char* txt) { Msg(Console::Color::Gray, txt); }
-	static void Msg(Console::Color txtcolor, const char* txt);
-	static void Warning(const char* txt);
-	static void Error(const char* txt);
+    static bool Initialize();
+    static std::string GetTimestamp(std::string format = "%H:%M:%S");
+    static void WriteSpacer();
 
-	static void Msgf(Console::Color txtcolor, const char* fmt, ...);
-	static void Warningf(const char* fmt, ...);
-	static void Errorf(const char* fmt, ...);
+    static void Internal_PrintModName(Console::Color meloncolor, Console::Color authorcolor, const char* name, const char* author, const char* version, const char* id);
 
-	static void vMsgf(Console::Color txtcolor, const char* fmt, va_list args);
-	static void vWarningf(const char* fmt, va_list args);
-	static void vErrorf(const char* fmt, va_list args);
+    // Shorthand way to log to console and write to file with linebreak afterwards
+    static void LogToConsoleAndFile(Log log);
 
-	static void Internal_PrintModName(Console::Color meloncolor, const char* name, const char* version);
-	static void Internal_Msg(Console::Color meloncolor, Console::Color txtcolor, const char* namesection, const char* txt);
-	static void Internal_Warning(const char* namesection, const char* txt);
-	static void Internal_Error(const char* namesection, const char* txt);
+    // Creates a log, and prints it to the console and file, all in one function.
+    static void QuickLog(const char* txt, LogType logType = Msg)
+    {LogToConsoleAndFile(Log(logType, nullptr, txt));}
+    static void QuickLogf(const char* fmt, LogType logType, ...)
+    {
+        va_list args;
+        va_start(args, fmt);
+        // TODO: test this?
+        QuickLog(string_format(fmt, args).c_str(), logType);
+        va_end(args);
+    }
+    static void QuickLogf(const char* fmt, LogType logType, va_list args)
+    {
+        // TODO: test this?
+        QuickLog(string_format(fmt, args).c_str(), logType);
+    }
 
-	static void Internal_Msgf(Console::Color meloncolor, Console::Color txtcolor, const char* namesection, const char* fmt, ...);
-	static void Internal_Warningf(const char* namesection, const char* fmt, ...);
-	static void Internal_Errorf(const char* namesection, const char* fmt, ...);
+    static void Internal_Msg(Console::Color meloncolor, Console::Color txtcolor, const char* namesection, const char* txt);
+    static void Internal_Warning(const char* namesection, const char* txt);
+    static void Internal_Error(const char* namesection, const char* txt);
 
-	static void Internal_vMsgf(Console::Color meloncolor, Console::Color txtcolor, const char* namesection, const char* fmt, va_list args);
-	static void Internal_vWarningf(const char* namesection, const char* fmt, va_list args);
-	static void Internal_vErrorf(const char* namesection, const char* fmt, va_list args);
-	
-	struct MessagePrefix
-	{
-		Console::Color Color;
-		const std::string Message;
-	};
-	
-	static void Internal_DirectWrite(Console::Color txtcolor, LogLevel level, const MessagePrefix prefixes[], const int size, const char* txt);
-	static void Internal_DirectWritef(Console::Color txtcolor, LogLevel level, const MessagePrefix prefixes[], const int size, const char* fmt, ...);
-	static void Internal_vDirectWritef(Console::Color txtcolor, LogLevel level, const MessagePrefix prefixes[], const int size, const char* fmt, va_list args);
+    class FileStream
+    {
+    public:
+        std::ofstream coss;
+        std::ofstream latest;
+        template <class T>
+        FileStream& operator<< (T val)
+        {
+            if (coss.is_open()) coss << val;
+            if (latest.is_open()) latest << val;
+            return *this;
+        }
+        FileStream& operator<< (std::ostream& (*pfun)(std::ostream&))
+        {
+            if (coss.is_open()) pfun(coss);
+            if (latest.is_open()) pfun(latest);
+            return *this; }
+        void Flush() { if (coss.is_open()) coss.flush(); if (latest.is_open()) latest.flush(); }
+    };
+    static FileStream LogFile;
+    static void Flush() { LogFile.Flush(); }
 
-	
-#ifndef PORT_DISABLE
-	class FileStream
-	{
-	public:
-		std::ofstream coss;
-		std::ofstream latest;
-		template <class T>
-		FileStream& operator<< (T val) { if (coss.is_open()) coss << val; if (latest.is_open()) latest << val; return *this; }
-		FileStream& operator<< (std::ostream& (*pfun)(std::ostream&)) { if (coss.is_open()) pfun(coss); if (latest.is_open()) pfun(latest); return *this; }
-		void Flush() { if (coss.is_open()) coss.flush(); if (latest.is_open()) latest.flush(); }
-	};
-	static FileStream LogFile;
-	static void Flush() { LogFile.Flush(); }
-#endif
+    static const char* LatestLogFileName;
+    static const char* FileExtension;
 
 private:
-	struct LogArgs
-	{
-		Console::Color txtcolor;
-		LogLevel level;
-		size_t prefixes_len;
-		std::string buffer;
-		std::vector<MessagePrefix> prefixes;
-
-		// Thanks sc2ad for this pretty good code
-		// Logic is now here so it's lifetime is guaranteed to be as long as we need it to be
-		LogArgs(Console::Color color_, LogLevel level_, const MessagePrefix prefixes_[], const int size, const char* fmt, va_list args) : txtcolor(color_), level(level_), prefixes_len(size), prefixes(prefixes_, prefixes_ + size),buffer(make_buffer(fmt, args)) {}
-	private:
-		static char* make_buffer(const char* fmt, va_list args) {
-			char* buffer;
-			auto sz = vsnprintf(nullptr, 0, fmt, args);
-			if (sz <= 0) {
-				buffer = "";
-			} else {
-				buffer = new char[sz];
-				vsprintf(buffer, fmt, args);
-			}
-
-            va_end(args);
-
-			return buffer;
-		}
-	};
-
-	
-	static void LogThreadHandle();
-	static void LogWrite(LogArgs& pair);
-	static std::mutex mutex_;
-	static std::thread logThread;
-	// Plain : Colored str
-	static std::list<Logger::LogArgs> logQueue;
-
-	static const char* FilePrefix;
-	static const char* FileExtension;
-	static const char* LatestLogFileName;
-	static int WarningCount;
-	static int ErrorCount;
-	static void CleanOldLogs(const char* path);
-#ifndef PORT_DISABLE
-	static bool CompareWritetime(const std::filesystem::directory_entry& first, const std::filesystem::directory_entry& second) { return first.last_write_time().time_since_epoch() >= second.last_write_time().time_since_epoch(); }
-#endif
+    static const char* FilePrefix;
+    static void CleanOldLogs(const char* path);
+    static std::string JavaInitialize();
+    static std::string jstring2string(JNIEnv *env, jstring jStr);
+    static bool CompareWritetime(const std::filesystem::directory_entry& first, const std::filesystem::directory_entry& second) { return first.last_write_time().time_since_epoch() >= second.last_write_time().time_since_epoch(); }
+    static std::string string_format(const std::string& format, ...)
+    {
+        va_list args;
+        int size_s = std::snprintf( nullptr, 0, format.c_str(), args ) + 1; // Extra space for '\0'
+        if( size_s <= 0 ){ throw std::runtime_error( "Error during formatting." ); }
+        auto size = static_cast<size_t>( size_s );
+        std::unique_ptr<char[]> buf( new char[ size ] );
+        std::snprintf( buf.get(), size, format.c_str(), args );
+        return std::string( buf.get(), buf.get() + size - 1 ); // We don't want the '\0' inside
+    }
 };

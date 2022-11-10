@@ -323,7 +323,7 @@ void BHapticsBridge::InternalCalls::submitPathArray(Mono::String *key, Mono::Str
 }
 
 Mono::String *BHapticsBridge::InternalCalls::getPositionStatus(Mono::String *position) {
-    Logger::Error("getPositionStatus not implemented yet");
+    Logger::Internal_Error("BHapticsBridge", "getPositionStatus not implemented yet");
     return nullptr;
 }
 

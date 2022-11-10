@@ -15,10 +15,10 @@ char* Encoding::OsToUtf8(const char* osStr)
 	char* str = new char[len + 1];
 	memset(str, 0, len + 1);
 	WideCharToMultiByte(CP_UTF8, 0, wstr, -1, str, len, NULL, NULL);
-	
+
 	delete[] wstr;
 	return str;
-	
+
 }
 
 char* Encoding::Utf8ToOs(const char* utf8Str)
@@ -34,8 +34,21 @@ char* Encoding::Utf8ToOs(const char* utf8Str)
 	char* str = new char[len + 1];
 	memset(str, 0, len + 1);
 	WideCharToMultiByte(CP_ACP, 0, wstr, -1, str, len, NULL, NULL);
-	
+
 	delete[] wstr;
 	return str;
+}
+#elif __ANDROID__
+#include "Encoding.h"
+
+char* Encoding::OsToUtf8(char* osStr)
+{
+    return osStr;
+
+}
+
+char* Encoding::Utf8ToOs(char* utf8Str)
+{
+    return utf8Str;
 }
 #endif

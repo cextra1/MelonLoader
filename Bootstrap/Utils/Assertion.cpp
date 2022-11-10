@@ -29,27 +29,14 @@ bool Assertion::vThrowInternalFailuref(const char* fmt, va_list args)
 	// TODO: implement JNI bindings to show message box and error
 	if (!ShouldContinue)
 		return false;
-	
+
 	ShouldContinue = false;
 
 	std::string timestamp = Logger::GetTimestamp();
-	
-	const Logger::MessagePrefix prefixes[]{
-#ifndef __ANDROID__
-		Logger::MessagePrefix{
-			Console::Green,
-			timestamp.c_str()
-		},
-#endif
-		Logger::MessagePrefix{
-			Console::Red,
-			"INTERNAL FAILURE"
-		},
-	};
-	
+
 #ifdef _WIN32
 	bool should_print_debug_info = (!Logger::LogFile.coss.is_open() || Debug::Enabled);
-	
+
 	if (should_print_debug_info)
 	{
 		Logger::Internal_DirectWrite(Console::Color::Red, LogLevel::Error, prefixes, sizeof(prefixes) / sizeof(prefixes[0]), msg);
@@ -62,7 +49,8 @@ bool Assertion::vThrowInternalFailuref(const char* fmt, va_list args)
 		MessageBoxA(NULL, "Please Post your latest.log File\nto #internal-failure in the MelonLoader Discord!", "MelonLoader - INTERNAL FAILURE!", MB_OK | MB_ICONERROR);
 	}
 #elif defined(__ANDROID__)
-	Logger::Internal_vDirectWritef(Console::Color::Red, LogLevel::Error, prefixes, sizeof(prefixes) / sizeof(prefixes[0]), fmt, args);
+    Logger::QuickLog("INTERNAL FAILURE", LogType::Error);
+    Logger::QuickLogf(fmt, LogType::Error, args);
 #endif
 
 	return false;

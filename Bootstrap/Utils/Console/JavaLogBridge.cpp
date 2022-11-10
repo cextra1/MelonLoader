@@ -6,7 +6,7 @@ extern "C" {
 	{
 		const char* cMsg = env->GetStringUTFChars(msg, nullptr);
 
-		Logger::Error(cMsg);
+		Logger::QuickLog(cMsg, LogType::Error);
 
 		env->ReleaseStringUTFChars(msg, cMsg);
 	}
@@ -15,7 +15,7 @@ extern "C" {
 	{
 		const char* cMsg = env->GetStringUTFChars(msg, nullptr);
 
-		Logger::Warning(cMsg);
+        Logger::QuickLog(cMsg, LogType::Warning);
 
 		env->ReleaseStringUTFChars(msg, cMsg);
 	}
@@ -24,7 +24,7 @@ extern "C" {
 	{
 		const char* cMsg = env->GetStringUTFChars(msg, nullptr);
 
-		Logger::Msg(Console::Reset, cMsg);
+		Logger::QuickLog(cMsg);
 
 		env->ReleaseStringUTFChars(msg, cMsg);
 	}

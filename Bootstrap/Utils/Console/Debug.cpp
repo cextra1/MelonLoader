@@ -13,95 +13,50 @@ bool Debug::Enabled = false;
 
 void Debug::Msg(const char* txt)
 {
-	Msgf("%s", txt);
+    if (!Enabled || !Assertion::ShouldContinue)
+        return;
+    DirectWrite(txt);
 }
 
 void Debug::Msgf(const char* fmt, ...)
 {
-	va_list args;
-	va_start(args, fmt);
-	vMsgf(fmt, args);
-	va_end(args);
+    va_list args;
+    va_start(args, fmt);
+    // TODO: test this?
+    Logger::QuickLog(string_format(fmt, args).c_str());
+    va_end(args);
 }
 
-void Debug::vMsgf(const char* fmt, va_list args)
+void Debug::DirectWrite(const char* txt)
 {
-	if (!Enabled || !Assertion::ShouldContinue)
-		return;
-	vForceWritef(fmt, args);
-}
-
-void Debug::ForceWrite(const char* txt)
-{
-	ForceWritef("%s", txt);
-}
-
-void Debug::ForceWritef(const char* fmt, ...)
-{
-	va_list args;
-	va_start(args, fmt);
-	vForceWritef(fmt, args);
-	va_end(args);
-}
-
-void Debug::vForceWritef(const char* fmt, va_list args)
-{
-	const Logger::MessagePrefix prefixes[]{
-#ifndef __ANDROID__
-		Logger::MessagePrefix{
-			Console::Green,
-			Logger::GetTimestamp().c_str()
-		},
-#endif
-		Logger::MessagePrefix{
-			Console::Blue,
-			"DEBUG"
-		},
-	};
-
-	Logger::Internal_vDirectWritef(Console::Color::Reset, LogLevel::Verbose, prefixes, sizeof(prefixes) / sizeof(prefixes[0]), fmt, args);
+    Logger::LogToConsoleAndFile(Log(LogType::Debug, nullptr, txt));
 }
 
 void Debug::Internal_Msg(Console::Color meloncolor, Console::Color txtcolor, const char* namesection, const char* txt)
 {
-	Internal_Msgf(meloncolor, txtcolor, namesection, "%s", txt);
+    if (!Enabled || !Assertion::ShouldContinue)
+        return;
+
+    Logger::LogToConsoleAndFile(Log(LogType::Debug, meloncolor, txtcolor, namesection, txt));
 }
 
-void Debug::Internal_Msgf(Console::Color meloncolor, Console::Color txtcolor, const char* namesection, const char* fmt, ...)
+std::string Debug::string_format(const std::string& format, ...)
 {
-	va_list args;
-	va_start(args, fmt);
-	Internal_vMsgf(meloncolor, txtcolor, namesection, fmt, args);
-	va_end(args);
-}
+    va_list args1, args2;
+    va_start(args1, format);
+    va_copy(args2, args1);
 
-void Debug::Internal_vMsgf(Console::Color meloncolor, Console::Color txtcolor, const char* namesection, const char* fmt, va_list args)
-{
-	if (namesection == NULL)
-	{
-		vMsgf(fmt, args);
-		return;
-	}
+    int size_s = vsnprintf(nullptr, 0, format.c_str(), args1) + 1;
 
-	if (!Enabled || !Assertion::ShouldContinue)
-		return;
+    if (size_s <= 0) { throw std::runtime_error("Error during formatting."); }
+    auto size = static_cast<size_t>(size_s);
+    std::unique_ptr<char[]> buf(new char[size]);
 
-	const Logger::MessagePrefix prefixes[]{
-#ifndef __ANDROID__
-		Logger::MessagePrefix{
-			Console::Green,
-			Logger::GetTimestamp().c_str()
-		},
-#endif
-		Logger::MessagePrefix{
-			meloncolor,
-			namesection
-		},
-		Logger::MessagePrefix{
-			Console::Blue,
-			"DEBUG"
-		},
-	};
+    vsnprintf(buf.get(), size, format.c_str(), args2);
+    std::string str{ buf.get(), buf.get() + size - 1 };
 
-	Logger::Internal_vDirectWritef(txtcolor, LogLevel::Verbose, prefixes, sizeof(prefixes) / sizeof(prefixes[0]), fmt, args);
+    va_end(args1);
+    va_end(args2);
+
+    return str;
 }

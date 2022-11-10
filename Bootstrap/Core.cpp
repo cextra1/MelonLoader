@@ -208,27 +208,28 @@ void Core::WelcomeMessage()
 {
 	if (Debug::Enabled)
 		Logger::WriteSpacer();
-	Logger::Msg("------------------------------");
-	Logger::Msg(GetVersionStr().c_str());
-	Logger::Msg((std::string("OS: ") + GetOSVersion()).c_str());
+	Logger::QuickLog("------------------------------");
+	Logger::QuickLog(GetVersionStr().c_str());
+	Logger::QuickLog((std::string("OS: ") + GetOSVersion()).c_str());
 #ifndef PORT_DISABLE
 	Logger::Msg(("Hash Code: " + HashCode::Hash).c_str());
 #endif
-	Logger::Msg("------------------------------");
-	Logger::Msg(("Name: " + std::string(Game::Name)).c_str());
-	Logger::Msg(("Developer: " + std::string(Game::Developer)).c_str());
-	Logger::Msg(("Unity Version: " + std::string(Game::UnityVersion)).c_str());
-	Logger::Msg(("Game Type: " + std::string((Game::IsIl2Cpp ? "Il2Cpp" : (Mono::IsOldMono ? "Mono" : "MonoBleedingEdge")))).c_str());
-	Logger::Msg(
+	Logger::QuickLog("------------------------------");
+	Logger::QuickLog(("Name: " + std::string(Game::Name)).c_str());
+	Logger::QuickLog(("Developer: " + std::string(Game::Developer)).c_str());
+	Logger::QuickLog(("Unity Version: " + std::string(Game::UnityVersion)).c_str());
+	Logger::QuickLog(("Game Type: " + std::string((Game::IsIl2Cpp ? "Il2Cpp" : (Mono::IsOldMono ? "Mono" : "MonoBleedingEdge")))).c_str());
+	Logger::QuickLog(
 #ifdef _WIN64
 		"Game Arch: x64"
 #elif defined(_WIN32)
 		"Game Arch: x86"
 #elif defined(__ANDROID__)
+        // TODO: if i make multiple builds, make it dynamic
             "Game Arch: Arm64"
 #endif
 	);
-	Logger::Msg("------------------------------");
+	Logger::QuickLog("------------------------------");
 	if (Debug::Enabled)
 		Logger::WriteSpacer();
 	Debug::Msg(("Game::BasePath = " + std::string(Game::BasePath)).c_str());
@@ -258,7 +259,7 @@ void Core::KillCurrentProcess()
 	TerminateProcess(current_process, NULL);
 	CloseHandle(current_process);
 #elif defined(__ANDROID__)
-    Logger::Error("Thread Core::KillCurrentProcess() invoked, killing process.");
+    Logger::QuickLog("Thread Core::KillCurrentProcess() invoked, killing process.", LogType::Error);
     pthread_kill(getpid(), SIGQUIT);
 #endif
 }

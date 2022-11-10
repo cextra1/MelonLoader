@@ -108,6 +108,7 @@ Console::Color Console::GetRainbowColor()
 
 std::string Console::ColorToAnsi(Color color, bool modecheck)
 {
+    // TODO: make it toggleable
 	if (modecheck)
 		color = ((Mode == DisplayMode::MAGENTA)
 			? Color::Magenta
