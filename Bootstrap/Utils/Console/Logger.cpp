@@ -144,8 +144,6 @@ void Logger::LogToConsoleAndFile(Log log)
 
 void Logger::CleanOldLogs(const char* path)
 {
-    // TODO: should probably implement this for android,
-    // don't feel like dealing with file system stuff though
 #ifndef __ANDROID__
     if (MaxLogs <= 0)
         return;
