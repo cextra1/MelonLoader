@@ -40,22 +40,20 @@ void Debug::Internal_Msg(Console::Color meloncolor, Console::Color txtcolor, con
     Logger::LogToConsoleAndFile(Log(LogType::Debug, meloncolor, txtcolor, namesection, txt));
 }
 
-std::string Debug::string_format(const std::string& format, ...)
+std::string Debug::string_format(const char* format, va_list args1)
 {
-    va_list args1, args2;
-    va_start(args1, format);
+    va_list args2;
     va_copy(args2, args1);
 
-    int size_s = vsnprintf(nullptr, 0, format.c_str(), args1) + 1;
+    int size_s = vsnprintf(nullptr, 0, format, args1) + 1;
 
     if (size_s <= 0) { throw std::runtime_error("Error during formatting."); }
     auto size = static_cast<size_t>(size_s);
     std::unique_ptr<char[]> buf(new char[size]);
 
-    vsnprintf(buf.get(), size, format.c_str(), args2);
+    vsnprintf(buf.get(), size, format, args2);
     std::string str{ buf.get(), buf.get() + size - 1 };
 
-    va_end(args1);
     va_end(args2);
 
     return str;

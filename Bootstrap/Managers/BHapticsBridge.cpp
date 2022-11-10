@@ -128,17 +128,17 @@ jfieldID BHapticsBridge::MethodMap::GetStaticField(BHapticsBridge::MethodMap::Ca
 
 #pragma region InternalCalls
 void BHapticsBridge::InternalCalls::start() {
-    Debug::Msgf("InternalCalls::BHaptics::Start");
+    Debug::Msg("InternalCalls::BHaptics::Start");
 
 //    CallOnUIThread_StaticVoid((void*)env->functions->CallStaticVoidMethodA, GetPlayer(), GetMethod(Player_PingAll), {});
 //    env->CallStaticVoidMethod(JavaCalls::getManager(), GetMethod(Player_Start));
     JavaCalls::Prepare();
 
-    Debug::Msgf("InternalCalls::BHaptics::Start complete");
+    Debug::Msg("InternalCalls::BHaptics::Start complete");
 }
 
 void BHapticsBridge::InternalCalls::stop() {
-    Debug::Msgf("InternalCalls::BHaptics::Stop");
+    Debug::Msg("InternalCalls::BHaptics::Stop");
 
 //    env->CallStaticVoidMethod(MethodMap::GetPlayer(), MethodMap::GetMethod(MethodMap::Player_Stop));
 }
@@ -160,7 +160,7 @@ void BHapticsBridge::InternalCalls::turnOff(Mono::String *key) {
 }
 
 void BHapticsBridge::InternalCalls::turnOffAll() {
-    Debug::Msgf("InternalCalls::BHaptics::TurnOffAll");
+    Debug::Msg("InternalCalls::BHaptics::TurnOffAll");
 
     auto env = Core::GetEnv();
     env->CallVoidMethod(JavaCalls::getManager(), MethodMap::GetMethod(MethodMap::Player_TurnOffAll));
@@ -366,7 +366,7 @@ bool BHapticsBridge::InternalCalls::isPlaying(Mono::String *key) {
 }
 
 bool BHapticsBridge::InternalCalls::isAnythingPlaying() {
-    Debug::Msgf("InternalCalls::BHaptics::TurnOffAll");
+    Debug::Msg("InternalCalls::BHaptics::TurnOffAll");
 
     auto env = Core::GetEnv();
     jboolean res = env->CallBooleanMethod(JavaCalls::getManager(), MethodMap::GetMethod(MethodMap::Player_TurnOffAll));

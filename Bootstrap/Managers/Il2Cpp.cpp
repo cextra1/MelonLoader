@@ -304,7 +304,7 @@ void Il2Cpp::Hooks::on_il2cpp_thread_detach(Il2CppThread *thread) {
 void Il2Cpp::Hooks::on_il2cpp_gc_set_mode(Il2CppGCMode mode) {
     Exports::il2cpp_gc_set_mode(mode);
 
-    Debug::Msgf("GC Started");
+    Debug::Msg("GC Started");
 }
 
 #pragma endregion Hooks
