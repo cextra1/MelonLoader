@@ -80,14 +80,14 @@ std::string Logger::JavaInitialize()
         return "";
     }
 
-    jmethodID mid = env->GetStaticMethodID(jCore, "Initialize", "()Ljava/lang/String;");
+    jmethodID mid = env->GetStaticMethodID(jCore, "Initialize", "(I)Ljava/lang/String;");
     if (mid == NULL)
     {
         Assertion::ThrowInternalFailure("Failed to find method com.melonloader.helpers.nativehelpers.Logger.Initialize()");
         return "";
     }
 
-    jobject jObj = env->CallStaticObjectMethod(jCore, mid);
+    jobject jObj = env->CallStaticObjectMethod(jCore, mid, MaxLogs);
     if (jObj == NULL)
     {
         Assertion::ThrowInternalFailure("Failed to invoke com.melonloader.helpers.nativehelpers.Logger.Initialize()");
