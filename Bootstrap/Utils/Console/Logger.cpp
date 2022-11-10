@@ -95,8 +95,6 @@ std::string Logger::JavaInitialize()
     }
 
     std::string filePath = jstring2string(env, (jstring)jObj);
-    std::string log = "[Bootstrap] Current log path at: " + filePath;
-    Logger::QuickLog(log.c_str());
     return filePath;
 }
 
