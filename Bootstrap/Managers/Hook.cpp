@@ -40,7 +40,7 @@ std::unordered_map<void*, Hook::FunchookDef*> Hook::HookMap;
 
 void Hook::Attach(void** target, void* detour)
 {
-    Debug::Msg("attaching");
+    //Debug::Msg("attaching");
 
     int rv;
     void* trueTarget = detour;

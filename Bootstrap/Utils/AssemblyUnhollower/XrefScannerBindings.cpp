@@ -132,7 +132,7 @@ void* XrefScannerBindings::Utils::ExtractTargetAddress(DisassemblyInstance* dis,
 
 	if (lastOp.type != ARM64_OP_IMM)
 	{
-		Debug::Msg("Non IMM OP");
+		//Debug::Msg("Non IMM OP");
 		return NULL;
 	}
 
@@ -398,7 +398,7 @@ void* XrefScannerBindings::XrefScanUtilFinder::FindLastRcxReadAddressBeforeCallT
 
 		if (instruction.id == ARM64_INS_MOV)
 		{
-			Debug::Msg("FindLastRcxReadAddressBeforeCallTo");
+			//Debug::Msg("FindLastRcxReadAddressBeforeCallTo");
 			funchook_disasm_log_instruction(&instruction);
 		}
 	}
@@ -450,7 +450,7 @@ void* XrefScannerBindings::XrefScanUtilFinder::FindByteWriteTargetRightAfterCall
 
 		if (instruction.id == ARM64_INS_MOV && seenCall)
 		{
-			Debug::Msg("FindByteWriteTargetRightAfterCallTo");
+			//Debug::Msg("FindByteWriteTargetRightAfterCallTo");
 			funchook_disasm_log_instruction(&instruction);
 		}
 	}
