@@ -35,7 +35,6 @@ void Log::BuildConsoleString(std::ostream& stream) const
 
 void Log::BuildConsoleString() const
 {
-    // TODO: is this needed with logcat?
 #ifndef __ANDROID__
     // Always initialize stream with timestamp
     std::string log =
@@ -46,7 +45,7 @@ void Log::BuildConsoleString() const
             Console::ColorToAnsi(logMeta->GetColorOverride(Console::Color::Gray)) +
             "] ";
 #else
-    std::string log = "";
+    std::string log = Console::ColorToAnsi(logMeta->GetColorOverride(Console::Color::Gray));
 #endif
 
     // If the logging melon has a name, print it
@@ -62,8 +61,7 @@ void Log::BuildConsoleString() const
     // If we're not coloring the whole line, use the specified input text color. If we are, the color would already be declared
     if (!logMeta->colorFullLine) log += Console::ColorToAnsi(textAnsiColor);
 
-    log += txt +
-           Console::ColorToAnsi(logMeta->GetColorOverride(Console::Color::Gray), false);
+    log += txt + Console::ColorToAnsi(Console::Color::Gray);
 
 #ifdef __ANDROID__
     __android_log_print(ANDROID_LOG_INFO, "MelonLoader", "%s", log.c_str());
