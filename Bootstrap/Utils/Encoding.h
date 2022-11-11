@@ -17,5 +17,11 @@ public:
     /// <param name="utf8Str"></param>
     /// <returns></returns>
     static char* Utf8ToOs(char* utf8Str);
+
+    /// <summary>
+    /// Handles string formatting
+    /// This isn't really encoding but close enough so it's here
+    /// </summary>
+    static std::string string_format(const char* format, va_list args1);
 };
 

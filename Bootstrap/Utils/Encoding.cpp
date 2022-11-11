@@ -52,3 +52,22 @@ char* Encoding::Utf8ToOs(char* utf8Str)
     return utf8Str;
 }
 #endif
+
+std::string Encoding::string_format(const char* format, va_list args1)
+{
+    va_list args2;
+    va_copy(args2, args1);
+
+    int size_s = vsnprintf(nullptr, 0, format, args1) + 1;
+
+    if (size_s <= 0) { throw std::runtime_error("Error during formatting."); }
+    auto size = static_cast<size_t>(size_s);
+    std::unique_ptr<char[]> buf(new char[size]);
+
+    vsnprintf(buf.get(), size, format, args2);
+    std::string str{ buf.get(), buf.get() + size - 1 };
+
+    va_end(args2);
+
+    return str;
+}
