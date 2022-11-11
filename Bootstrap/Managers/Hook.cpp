@@ -72,7 +72,7 @@ void Hook::Attach(void** target, void* detour)
 
 void Hook::Detach(void** target, void* detour)
 {
-    Debug::Msg("detaching");
+    //Debug::Msg("detaching");
 
     int rv;
 
