@@ -8,6 +8,7 @@ class InternalCalls
 public:
 	static bool Initialized;
 	static void Initialize();
+    static Mono::String* GetLocalTimeZone();
 
 	class MelonLogger
 	{

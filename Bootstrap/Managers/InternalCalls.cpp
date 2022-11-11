@@ -31,6 +31,8 @@ void InternalCalls::Initialize()
     UnhollowerIl2Cpp::AddInternalCalls();
     BHaptics::AddInternalCalls();
 
+    Mono::AddInternalCall("MelonLoader.Fixes.DateTimeOverride::GetLocalTimeZone", (void*)GetLocalTimeZone);
+
     Initialized = true;
 }
 
@@ -297,3 +299,59 @@ void InternalCalls::BHaptics::AddInternalCalls()
 }
 
 #pragma endregion
+
+Mono::String* InternalCalls::GetLocalTimeZone()
+{
+    auto env = Core::GetEnv();
+
+    jclass jCore = env->FindClass("java/util/TimeZone");
+    if (jCore == NULL)
+    {
+        Logger::QuickLog("Failed to find class java.util.TimeZone", LogType::Error);
+        return Mono::Exports::mono_string_new(Mono::domain, "");
+    }
+
+    jmethodID mid = env->GetStaticMethodID(jCore, "getDefault", "()Ljava/util/TimeZone;");
+    if (mid == NULL)
+    {
+        Logger::QuickLog("Failed to find method java.util.TimeZone.getDefault()", LogType::Error);
+        return Mono::Exports::mono_string_new(Mono::domain, "");
+    }
+
+    jobject jObj = env->CallStaticObjectMethod(jCore, mid);
+    if (jObj == NULL)
+    {
+        Logger::QuickLog("Failed to invoke java.util.TimeZone.getDefault()", LogType::Error);
+        return Mono::Exports::mono_string_new(Mono::domain, "");
+    }
+
+    jmethodID mid2 = env->GetMethodID(jCore, "getID", "()Ljava/lang/String;");
+    if (mid2 == NULL)
+    {
+        Logger::QuickLog("Failed to find method java.util.TimeZone.getID()", LogType::Error);
+        return Mono::Exports::mono_string_new(Mono::domain, "");
+    }
+
+    jobject jObj2 = env->CallObjectMethod(jObj, mid2);
+    if (jObj2 == NULL)
+    {
+        Logger::QuickLog("Failed to invoke java.util.TimeZone.getId()", LogType::Error);
+        return Mono::Exports::mono_string_new(Mono::domain, "");
+    }
+
+    jstring jStr = (jstring)jObj2;
+    const jclass stringClass = env->GetObjectClass(jStr);
+    const jmethodID getBytes = env->GetMethodID(stringClass, "getBytes", "(Ljava/lang/String;)[B");
+    const jbyteArray stringJbytes = (jbyteArray) env->CallObjectMethod(jStr, getBytes, env->NewStringUTF("UTF-8"));
+
+    size_t length = (size_t) env->GetArrayLength(stringJbytes);
+    jbyte* pBytes = env->GetByteArrayElements(stringJbytes, NULL);
+
+    std::string ret = std::string((char *)pBytes, length);
+    env->ReleaseByteArrayElements(stringJbytes, pBytes, JNI_ABORT);
+
+    env->DeleteLocalRef(stringJbytes);
+    env->DeleteLocalRef(stringClass);
+
+    return Mono::Exports::mono_string_new(Mono::domain, ret.c_str());
+}
