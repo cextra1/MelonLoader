@@ -20,11 +20,25 @@ namespace MelonLoader
             MelonUtils.Setup(curDomain);
             Assertions.LemonAssertMapping.Setup();
 
-            // TODO: MonoLibrary stuff; requires recompiling of Bootstrap
+            // TODO: MonoLibrary stuff
 #if !__ANDROID__
             if (!MonoLibrary.Setup()
                 || !MonoResolveManager.Setup())
                 return 1;
+#else
+            foreach (var file in System.IO.Directory.GetFiles(MelonUtils.UserLibsDirectory, "*.dll"))
+            {
+                try
+                {
+                    System.Reflection.Assembly.LoadFrom(file);
+                    MelonDebug.Msg("Loaded " + System.IO.Path.GetFileName(file) + " from UserLibs!");
+                }
+                catch (Exception e)
+                {
+                    MelonLogger.Msg("Failed to load " + System.IO.Path.GetFileName(file) + " from UserLibs!");
+                    MelonLogger.Error(e.ToString());
+                }
+            }
 #endif
 
             HarmonyInstance = new HarmonyLib.Harmony(BuildInfo.Name);
