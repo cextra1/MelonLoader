@@ -6,4 +6,4 @@
 	url = https://github.com/kubo/funchook.git
 [submodule "JavaBindings/external/BHapticsHapticLibrary"]
 	path = JavaBindings/external/BHapticsHapticLibrary
-	url = https://github.com/bhaptics/haptic-library
+	url = https://github.com/bhaptics/haptic-library.git
