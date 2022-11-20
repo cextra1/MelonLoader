@@ -1,4 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+	<ItemGroup>
+	  <PackageReference Include="AssetRipper.VersionUtilities" Version="1.2.1" />
+	  <PackageReference Include="Samboy063.Tomlet" Version="5.0.0" />
+	</ItemGroup>
 	<ItemGroup Label="ProjectConfigurations">
 		<ProjectConfiguration Include="Debug|Windows">
 			<Configuration>Debug</Configuration>
@@ -38,10 +42,6 @@
 		<Reference Include="AssemblyUnhollower">
 		  <HintPath>F:\Projects\GitHub\Il2CppAssemblyUnhollower\AssemblyUnhollower\bin\Debug\net4.7.2\AssemblyUnhollower.dll</HintPath>
 		</Reference>
-		<Reference Include="AssetRipper.VersionUtilities">
-			<HintPath>$(SolutionDir)Output\$(Configuration)\$(Platform)\MelonLoader\AssetRipper.VersionUtilities.dll</HintPath>
-			<Private>false</Private>
-		</Reference>
 		<Reference Include="Cpp2IL.Core">
 		  <HintPath>F:\Projects\GitHub\Cpp2IL\Cpp2IL.Core\bin\Debug\net472\Cpp2IL.Core.dll</HintPath>
 		</Reference>
@@ -50,10 +50,6 @@
 		</Reference>
 		<Reference Include="Mono.Cecil">
 		  <HintPath>F:\Projects\GitHub\Il2CppAssemblyUnhollower\AssemblyUnhollower\bin\Debug\net4.7.2\Mono.Cecil.dll</HintPath>
-		</Reference>
-		<Reference Include="Tomlet">
-			<HintPath>$(SolutionDir)Output\$(Configuration)\$(Platform)\MelonLoader\Tomlet.dll</HintPath>
-			<Private>false</Private>
 		</Reference>
 	</ItemGroup>
 	<ItemGroup>

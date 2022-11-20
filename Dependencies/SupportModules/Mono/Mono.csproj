@@ -33,6 +33,9 @@
 		<Compile Include="..\UnityMappers.cs" Link="UnityMappers.cs" />
 	</ItemGroup>
 	<ItemGroup>
+	  <PackageReference Include="Samboy063.Tomlet" Version="5.0.0" />
+	</ItemGroup>
+	<ItemGroup>
 	  <ProjectReference Include="..\..\..\MelonLoader\MelonLoader.csproj">
 	    <Private>false</Private>
 	    <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>

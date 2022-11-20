@@ -53,32 +53,18 @@
 			<HintPath>Libs\UnityEngine.CoreModule.dll</HintPath>
 			<Private>false</Private>
 		</Reference>
-		<Reference Include="0Harmony">
-			<HintPath>$(SolutionDir)Output\$(Configuration)\$(Platform)\MelonLoader\0Harmony.dll</HintPath>
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="AssetRipper.VersionUtilities">
-			<HintPath>$(SolutionDir)Output\$(Configuration)\$(Platform)\MelonLoader\AssetRipper.VersionUtilities.dll</HintPath>
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="Mono.Cecil">
-			<HintPath>$(SolutionDir)Output\$(Configuration)\$(Platform)\MelonLoader\Mono.Cecil.dll</HintPath>
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="MonoMod.Utils">
-			<HintPath>$(SolutionDir)Output\$(Configuration)\$(Platform)\MelonLoader\MonoMod.Utils.dll</HintPath>
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="Tomlet">
-			<HintPath>$(SolutionDir)Output\$(Configuration)\$(Platform)\MelonLoader\Tomlet.dll</HintPath>
-			<Private>false</Private>
-		</Reference>
 	</ItemGroup>
 	<ItemGroup>
 		<Compile Include="..\Component.cs" Link="Component.cs" />
 		<Compile Include="..\SupportModule_To.cs" Link="SupportModule_To.cs" />
 		<Compile Include="..\SceneHandler.cs" Link="SceneHandler.cs" />
 		<Compile Include="..\UnityMappers.cs" Link="UnityMappers.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <PackageReference Include="AssetRipper.VersionUtilities" Version="1.2.1" />
+	  <PackageReference Include="HarmonyX" Version="2.10.1" />
+	  <PackageReference Include="MonoMod.Utils" Version="22.5.1.1" />
+	  <PackageReference Include="Samboy063.Tomlet" Version="5.0.0" />
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\..\..\MelonLoader\MelonLoader.csproj">

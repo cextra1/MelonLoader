@@ -53,15 +53,22 @@
 		<DebugSymbols>true</DebugSymbols>
 		<DebugType>portable</DebugType>
 		<Optimize>false</Optimize>
-		<DefineConstants>TRACE;DEBUG;__ANDROID__</DefineConstants>
+		<DefineConstants>$(DefineConstants)TRACE;__ANDROID__</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Android' ">
 		<DebugSymbols>false</DebugSymbols>
 		<DebugType>None</DebugType>
 		<Optimize>true</Optimize>
+		<DefineConstants>$(DefineConstants)TRACE;__ANDROID__</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup>
 		<RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Windows'">
+	  <DefineConstants>$(DefineConstants)TRACE;__ANDROID__</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Windows'">
+	  <DefineConstants>$(DefineConstants)TRACE;__ANDROID__</DefineConstants>
 	</PropertyGroup>
 	<ItemDefinitionGroup>
 		  <PackageReference>
