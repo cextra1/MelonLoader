@@ -1,0 +1,2 @@
+../tools/cmake_wrapper.sh -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/bin/make -p android -G 'CodeBlocks - Unix Makefiles' -S .. -B ./
+../tools/cmake_wrapper.sh -p android --build . --target Bootstrap
