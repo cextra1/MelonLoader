@@ -1,5 +1,3 @@
-Add-Type -As System.IO.Compression.FileSystem
-
 # Why not
 Write-Host
 "                                s*rss
