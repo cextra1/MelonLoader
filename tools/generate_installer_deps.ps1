@@ -103,7 +103,7 @@ Write-Host "Compressing to ZIP..."
 
 # Compress	
 #Compress-Archive -Path ./installer_deps/* -CompressionLevel Optimal -DestinationPath ./installer_deps.zip
-Start-Process -FilePath "C:\Program Files\7-Zip\7zG.exe" -ArgumentList @("a", "installer_deps.zip", "$baseMlPath\tools\installer_deps\*")
+Start-Process -FilePath "C:\Program Files\7-Zip\7zG.exe" -ArgumentList @("a", "installer_deps.zip", "$baseMlPath\tools\installer_deps\*") -Wait
 
 Write-Host "Done`n"
 Write-Host "Cleaning up..."
