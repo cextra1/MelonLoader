@@ -94,9 +94,9 @@ Copy-Item `
 Copy-Item `
     -Path "$baseMlPath\Bootstrap\cmake-build-debug-wsl---bootstrap\capstone\libcapstone.so" `
     -Destination "installer_deps\native"
-Copy-Item `
-    -Path "$baseMlPath\Bootstrap\cmake-build-debug-wsl---bootstrap\funchook\libfunchook.so" `
-    -Destination "installer_deps\native"
+#Copy-Item `
+#    -Path "$baseMlPath\Bootstrap\cmake-build-debug-wsl---bootstrap\funchook\libfunchook.so" `
+#    -Destination "installer_deps\native"
 
 Write-Host "Done`n"
 Write-Host "Compressing to ZIP..."
