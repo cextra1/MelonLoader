@@ -59,7 +59,7 @@ Copy-Item `
 
 # Copy MelonLoader
 Copy-Item `
-    -Path "$baseMlPath\Output\Release\Android\MelonLoader\MelonLoader.dll" `
+    -Path "$baseMlPath\Output\Release\Android\MelonLoader\*.dll" `
     -Destination "installer_deps\core"
 
 # Copy Support Modules & Co.

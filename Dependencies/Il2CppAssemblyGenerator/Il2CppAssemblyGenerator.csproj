@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<ItemGroup>
 	  <PackageReference Include="AssetRipper.VersionUtilities" Version="1.2.1" />
+	  <PackageReference Include="Mono.Cecil" Version="0.11.4" />
 	  <PackageReference Include="Samboy063.Tomlet" Version="5.0.0" />
 	</ItemGroup>
 	<ItemGroup Label="ProjectConfigurations">
@@ -47,9 +48,6 @@
 		</Reference>
 		<Reference Include="LibCpp2IL">
 		  <HintPath>F:\Projects\GitHub\Cpp2IL\LibCpp2IL\bin\Debug\net472\LibCpp2IL.dll</HintPath>
-		</Reference>
-		<Reference Include="Mono.Cecil">
-		  <HintPath>F:\Projects\GitHub\Il2CppAssemblyUnhollower\AssemblyUnhollower\bin\Debug\net4.7.2\Mono.Cecil.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 	<ItemGroup>
