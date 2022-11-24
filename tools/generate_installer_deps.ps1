@@ -62,11 +62,10 @@ Copy-Item `
     -Path "$baseMlPath\Output\Release\Android\MelonLoader\*.dll" `
     -Destination "installer_deps\core"
 
-# Copy Support Modules & Co.
+# Copy Support Modules
 Copy-Item `
-    -Path "$baseMlPath\Output\Release\Android\MelonLoader\Dependencies\SupportModules\Il2Cpp.dll" `
+    -Path "$baseMlPath\Output\Release\Android\MelonLoader\Dependencies\SupportModules\*.dll" `
     -Destination "installer_deps\support_modules"
-    # TODO: do i need the extra files?
 
 Write-Host "Done`n"
 Write-Host "Building JavaBindings..."

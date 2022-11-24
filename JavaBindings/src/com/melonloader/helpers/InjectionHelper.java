@@ -32,7 +32,6 @@ public class InjectionHelper {
         // AssetsTools can't read the data, unsure why
         //UnityInformationHelper.SaveGlobalGameManagersToFile();
 
-        // TODO: is this where it should be happening?
         try {
             InjectBootstrap();
         } catch (Exception e) {
