@@ -57,7 +57,6 @@ namespace MelonLoader.Support
         private static Type streamType = null;
         private static void ConsoleCleaner()
         {
-            Il2CppSystem.Console.SetOut(new Il2CppSystem.IO.StreamWriter(Il2CppSystem.IO.Stream.Null));
 #if __ANDROID__
             return;
 #endif
