@@ -60,7 +60,7 @@ namespace MelonLoader.Support
 #if __ANDROID__
             return;
 #endif
-            // Il2CppSystem.Console.SetOut(new Il2CppSystem.IO.StreamWriter(Il2CppSystem.IO.Stream.Null));
+            Il2CppSystem.Console.SetOut(new Il2CppSystem.IO.StreamWriter(Il2CppSystem.IO.Stream.Null));
             try
             {
                 Il2Cppmscorlib = Assembly.Load("Il2Cppmscorlib");
