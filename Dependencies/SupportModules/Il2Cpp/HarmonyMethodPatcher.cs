@@ -63,7 +63,7 @@ namespace MelonLoader.Support
             IntPtr il2CppShimDelegatePtr = il2CppShimDelegate.GetFunctionPointer();
 
             if (methodDetourPointer != IntPtr.Zero)
-                MelonUtils.NativeHookDetach(copiedMethodInfoPointer, methodDetourPointer);
+                MelonUtils.NativeHookDetach(copiedMethodInfoPointer);
             MelonUtils.NativeHookAttach(copiedMethodInfoPointer, il2CppShimDelegatePtr);
             methodDetourPointer = il2CppShimDelegatePtr;
 

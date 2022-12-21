@@ -6,7 +6,7 @@
 #include <android/log.h>
 #include <string>
 #include <math.h>
-#include <funchook.h>
+//#include "../../external/funchook/include/funchook.h"
 
 #pragma region Constants
 // 4kb

@@ -22,6 +22,6 @@ namespace MelonLoader
         [Obsolete("MelonLoader.Imports.Hook is Only Here for Compatibility Reasons. Please use MelonLoader.MelonUtils.NativeHookAttach instead.")]
         public static void Hook(IntPtr target, IntPtr detour) => MelonUtils.NativeHookAttach(target, detour);
         [Obsolete("MelonLoader.Imports.Unhook is Only Here for Compatibility Reasons. Please use MelonLoader.MelonUtils.NativeHookDetach instead.")]
-        public static void Unhook(IntPtr target, IntPtr detour) => MelonUtils.NativeHookDetach(target, detour);
+        public static void Unhook(IntPtr target, IntPtr detour) => MelonUtils.NativeHookDetach(target);
     }
 }

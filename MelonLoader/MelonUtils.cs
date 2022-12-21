@@ -451,7 +451,7 @@ namespace MelonLoader
         [MethodImpl(MethodImplOptions.InternalCall)]
         public extern static void NativeHookAttach(IntPtr target, IntPtr detour);
         [MethodImpl(MethodImplOptions.InternalCall)]
-        public extern static void NativeHookDetach(IntPtr target, IntPtr detour);
+        public extern static void NativeHookDetach(IntPtr target);
 #if __ANDROID__
         [MethodImpl(MethodImplOptions.InternalCall)]
         [return: MarshalAs(UnmanagedType.LPStr)]

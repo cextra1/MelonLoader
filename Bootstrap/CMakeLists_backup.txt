@@ -22,16 +22,16 @@ file(GLOB_RECURSE HEADERS_FILES "./Managers/*.h" "./Utils/*.h" ./Core.h)
 
 list(APPEND SRC_FILES ./Core.cpp)
 list(APPEND HEADERS_FILES ./Core.h)
+include_directories(./external/dobby)
 
 if(PLATFORM STREQUAL "ANDROID")
     set(USE_CAPSTONE YES)
     set(USE_FUNCHOOK YES)
-    set(USE_DOBBY YES)
 
     add_compile_definitions(__ANDROID__ PORT_DISABLE)
 
     list(APPEND SRC_FILES ./Base/main.cpp)
-    list(APPEND BOOTSTRAP_DEPS capstone-shared funchook-shared dobby log android)
+    list(APPEND BOOTSTRAP_DEPS capstone-shared funchook-shared log android)
 elseif(PLATFORM STREQUAL "WINDOWS")
     add_compile_definitions(_WIN32)
 
@@ -85,15 +85,6 @@ if(DEFINED USE_FUNCHOOK)
     get_property(FC_LINK_LIBRARIES TARGET funchook-shared PROPERTY LINK_LIBRARIES)
     list(REMOVE_ITEM LINK_LIBRARIES capstone)
     set_property(TARGET funchook-shared PROPERTY LINK_LIBRARIES dl capstone-shared)
-endif()
-
-if(DEFINED USE_DOBBY)
-    set(DOBBY_GENERATE_SHARED ON)
-
-    add_subdirectory("./external/Dobby" Dobby)
-
-    get_property(FC_LINK_LIBRARIES TARGET dobby PROPERTY LINK_LIBRARIES)
-    set_property(TARGET dobby PROPERTY LINK_LIBRARIES dl)
 endif()
 
 #if (CMAKE_BUILD_TYPE EQUAL "Debug")

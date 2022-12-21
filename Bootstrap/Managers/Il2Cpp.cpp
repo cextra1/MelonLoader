@@ -245,7 +245,7 @@ Il2Cpp::Domain* Il2Cpp::Hooks::il2cpp_init(const char* name)
     exit_early:
 
 	Debug::Msg("Detaching Hook from il2cpp_init...");
-	Hook::Detach((void**)&Exports::il2cpp_init, (void*)Hooks::il2cpp_init);
+	Hook::Detach((void**)&Exports::il2cpp_init);
 
 	return domain;
 }
@@ -266,7 +266,7 @@ Il2Cpp::Object* Il2Cpp::Hooks::il2cpp_runtime_invoke(Method* method, Object* obj
 //    if (sceneChange)
     {
         Debug::Msg("Detaching Hook from il2cpp_runtime_invoke...");
-        Hook::Detach((void**)&(Exports::il2cpp_runtime_invoke), (void*)il2cpp_runtime_invoke);
+        Hook::Detach((void**)&(Exports::il2cpp_runtime_invoke));
 
 //        MonoThreadHandle();
         Mono::Exports::mono_melonloader_thread_suspend_reload();
