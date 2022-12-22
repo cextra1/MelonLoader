@@ -43,12 +43,12 @@ namespace MelonLoader
 
             HarmonyInstance = new HarmonyLib.Harmony(BuildInfo.Name);
 
-            Fixes.ForcedCultureInfo.Install();
-            Fixes.InstancePatchFix.Install();
-            Fixes.ProcessFix.Install();
+            //Fixes.ForcedCultureInfo.Install();
+            //Fixes.InstancePatchFix.Install();
+            //Fixes.ProcessFix.Install();
 #if __ANDROID__
-            Fixes.DateTimeOverride.Install();
-            Fixes.NetSocketsFix.Install();
+            //Fixes.DateTimeOverride.Install();
+            //Fixes.NetSocketsFix.Install();
 #endif
 #if !__ANDROID__
             PatchShield.Install();

@@ -34,9 +34,9 @@ if [[ -z ${MAKE_MODE} ]]; then
   case ${PLATFORM} in
     android)
       EXTRA_CMAKE_ARGS+=(
-        -DCMAKE_TOOLCHAIN_FILE=$NDK/build/cmake/android.toolchain.cmake
-        -DANDROID_ABI=$ABI
-        -DANDROID_NATIVE_API_LEVEL=$MINSDKVERSION
+        -DCMAKE_TOOLCHAIN_FILE=/mnt/d/Programs/Android/Toolchain_Linux/ndk/build/cmake/android.toolchain.cmake
+        -DANDROID_ABI=arm64-v8a
+        -DANDROID_NATIVE_API_LEVEL=23
         -DPLATFORM=ANDROID
       )
       ;;
