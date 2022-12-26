@@ -16,8 +16,12 @@
 ---
 
 ## Lemon Credits
-- [SirCoolness](https://github.com/SirCoolness) - Wrote most of the android code (and the entirety of the Bootstrap) that I used for this version, as well as just being helpful
-- [SamboyCoding](https://github.com/SamboyCoding) - Helped me a bunch with assembly generation problems
+- [SirCoolness](https://github.com/SirCoolness)
+  - Made the original version of Lemon which gave me a major starting place.
+  - Wrote the Android additions to the Bootstrap.
+  - Spent a lot of time helping me being stupid when compiling stuff and answering various questions :P
+- [SamboyCoding](https://github.com/SamboyCoding) - Helped me with various things
+- [RinLovesYou](https://github.com/RinLovesYou) - Helped me with Dobby when I attempted to get that working
 
 ## GENERAL INFORMATION:
 
