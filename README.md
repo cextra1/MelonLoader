@@ -20,6 +20,7 @@
   - Made the original version of Lemon which gave me a major starting place.
   - Wrote the Android additions to the Bootstrap.
   - Spent a lot of time helping me being stupid when compiling stuff and answering various questions :P
+  - Hosts all of the Unity dependencies the installer uses
 - [SamboyCoding](https://github.com/SamboyCoding) - Helped me with various things
 - [RinLovesYou](https://github.com/RinLovesYou) - Helped me with Dobby when I attempted to get that working
 
