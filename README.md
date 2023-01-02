@@ -25,10 +25,10 @@
 - [RinLovesYou](https://github.com/RinLovesYou) - Helped me with Dobby when I attempted to get that working
 
 ## Lemon Testers
-Ben_S
-Lucy-Cola
-extraes
-adamdev
+- Ben_S
+- Lucy-Cola
+- extraes
+- adamdev
 
 ## GENERAL INFORMATION:
 - [The Official Wiki](https://melonwiki.xyz)
