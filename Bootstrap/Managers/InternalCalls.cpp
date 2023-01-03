@@ -259,8 +259,9 @@ void* InternalCalls::UnhollowerIl2Cpp::GetProcAddress(void* hModule, Mono::Strin
 void* InternalCalls::UnhollowerIl2Cpp::LoadLibrary(Mono::String* lpFileName)
 {
     char* parsedLib = Mono::Exports::mono_string_to_utf8(lpFileName);
-    Debug::Msg(parsedLib);
-    if (strcmp(parsedLib, "GameAssembly.dll") == 0)
+    //Debug::Msg(parsedLib);
+    if (strcmp(parsedLib, "GameAssembly.dll") == 0
+       || strcmp(parsedLib, "libil2cpp.so") == 0)
         return Il2Cpp::Handle;
 
     return dlopen(parsedLib, RTLD_NOW | RTLD_GLOBAL);
