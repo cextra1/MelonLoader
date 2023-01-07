@@ -71,6 +71,7 @@ Write-Host "Done`n"
 Write-Host "Building JavaBindings..."
 
 # Build JavaBindings
+Start-Process -FilePath "bash.exe" -ArgumentList @("-c `"dos2unix ../JavaBindings/bin/build.sh`"") -Wait -NoNewWindow
 Start-Process -FilePath "bash.exe" -ArgumentList @("-c ../JavaBindings/bin/build.sh") -Wait -NoNewWindow
 
 # Copy dex
@@ -84,6 +85,8 @@ Write-Host "Building Bootstrap..."
 # Build Bootstrap
 # TODO: find a way to not reuse CLion's build directory, idk why generating my own causes errors
 $bsBuildDir = "../Bootstrap/cmake-build-debug-wsl---bootstrap"
+Start-Process -FilePath "bash.exe" -ArgumentList @("-c `"cd $bsBuildDir && dos2unix ../tools/build.sh`"") -Wait -NoNewWindow
+Start-Process -FilePath "bash.exe" -ArgumentList @("-c `"cd $bsBuildDir && dos2unix ../tools/cmake_wrapper.sh`"") -Wait -NoNewWindow
 Start-Process -FilePath "bash.exe" -ArgumentList @("-c `"cd $bsBuildDir && ../tools/build.sh`"") -Wait -NoNewWindow
 
 # Copy Native Modules
